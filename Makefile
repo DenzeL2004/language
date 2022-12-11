@@ -34,7 +34,7 @@ obj/AST_tree.o: $(FRONT_DIR)/AST_tree/AST_tree.cpp config/language_config.h		\
 	g++ $(FRONT_DIR)/AST_tree/AST_tree.cpp -c -o obj/AST_tree.o $(FLAGS)
 
 
-obj/AST_draw_tree.o:  $(FRONT_DIR)/AST_tree/AST_tree.cpp $(FRONT_DIR)/AST_tree/AST_draw_tree.cpp 	\
+obj/AST_draw_tree.o:  $(FRONT_DIR)/AST_tree/AST_tree.cpp $(FRONT_DIR)/AST_tree/AST_draw_tree.cpp config/language_config.h	\
 				  	  $(FRONT_DIR)/AST_tree/AST_tree.h   $(FRONT_DIR)/AST_tree/AST_draw_tree.h	 
 					   	
 	g++ $(FRONT_DIR)/AST_tree/AST_draw_tree.cpp -c -o obj/AST_draw_tree.o $(FLAGS)

@@ -45,7 +45,7 @@ Node* Create_value_node     (const double value,   Node* left, Node* right);
 
 Node* Create_operation_node (const int operation,  Node* left, Node* right);
 
-Node* Create_object_node    (const char* variable, Node* left, Node* right);
+Node* Create_object_node    (const char* name_obj, Node* left, Node* right);
 
 
 

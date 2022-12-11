@@ -105,9 +105,9 @@ Node* Create_operation_node (const int operation, Node* left, Node* right)
 
 //======================================================================================
 
-Node* Create_object_node (const char *name_variable, Node* left, Node* right)
+Node* Create_object_node (const char *name_obj, Node* left, Node* right)
 {
-    assert (name_variable != nullptr && "name_variable is nullptr");
+    assert (name_obj != nullptr && "name_obj is nullptr");
 
     Node *node = Create_empty_node ();
     if (Check_nullptr (node))
@@ -119,7 +119,7 @@ Node* Create_object_node (const char *name_variable, Node* left, Node* right)
     AST_data* node_data = (AST_data*) node->data;
 
     node_data->node_type = VAR;
-    node_data->data.obj = name_variable;
+    node_data->data.obj = name_obj;
 
     node->data = node_data;
 

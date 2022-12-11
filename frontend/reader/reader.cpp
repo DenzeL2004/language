@@ -37,6 +37,16 @@ static Node* Get_priority        (int *pos, const Array_struct *tokens);
 //-------------------------------------------------------------------------------
 
 
+//-------------------------------------------------------------------------------
+//RULE: CALL FUNCTION
+
+static Node* Get_call_function (int *pos, const Array_struct *tokens);
+
+static Node* Get_arg           (int *pos, const Array_struct *tokens);
+
+//-------------------------------------------------------------------------------
+
+
 static bool Is_reserved_word (char *token);
 
 static inline int Is_num (char *cur_token);
@@ -309,7 +319,7 @@ static Node* Unique_operation (int *pos, const Array_struct *tokens)
         char *next_token = (char*) Array_get_ptr_by_ind (tokens, *pos + 1);
 
         if (!strcmp (next_token, "("))
-            return nullptr;// TODO: Get_call_function
+            return Get_call_function (pos, tokens);
     }
 
     if (!strcmp (cur_token, Name_lang_operations [SUB]))
@@ -334,7 +344,79 @@ static Node* Unique_operation (int *pos, const Array_struct *tokens)
     return node;
 }
 
+//=================================================================================================
 
+static Node* Get_call_function (int *pos, const Array_struct *tokens)
+{
+    assert (tokens != nullptr && "tokens is nullptr");
+    assert (pos != nullptr && "pos is nullptr");
+
+    char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+
+    Node* node = Create_empty_node ();
+    DEF_TYPE (node, CALL);
+
+    if (Is_reserved_word (cur_token))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "a reserved word \"%s\" has been used as a variable name", cur_token);
+        return nullptr;
+    }    
+
+    node->left = Create_object_node (cur_token, nullptr, nullptr);
+    DEF_TYPE (node->left, FUNC);
+
+    (*pos) += 2;
+    cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+
+    node->right = Get_arg (pos, tokens);
+    cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+
+    while (!strcmp (cur_token, ","))
+    {
+        Node* new_node = Create_node ();
+        if (Check_nullptr (new_node))
+        {
+            PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, new node is nullptr\n");
+            return nullptr;
+        }
+
+        (*pos)++;
+
+        new_node = Get_arg (pos, tokens);
+
+        new_node->right = node->right;
+        node->right = new_node;
+
+        cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+    }
+        
+
+    if (strcmp(cur_token, ")"))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "not \')\' after \'(\',"
+                                    " cur_token: |%s|.\npos = %d", cur_token, *pos);
+        return nullptr;
+    }
+
+    (*pos)++;
+
+    return node;
+}
+
+//=================================================================================================
+
+static Node* Get_arg (int *pos, const Array_struct *tokens)
+{
+    assert (tokens != nullptr && "tokens is nullptr");
+    assert (pos != nullptr && "pos is nullptr");
+
+    Node *node = Create_empty_node ();
+    DEF_TYPE (node, ARG);
+
+    node->left = Get_expression (pos, tokens);
+
+    return node;
+}
 
 //=================================================================================================
 
@@ -380,6 +462,12 @@ static Node* Get_priority (int *pos, const Array_struct *tokens)
 
         if (Is_name (cur_token))
         {
+            if (Is_reserved_word (cur_token))
+            {
+                PROCESS_ERROR (SYNTAX_ERR, "a reserved word \"%s\" has been used as a variable name", cur_token);
+                return nullptr;
+            }
+
             node = Create_object_node (cur_token, nullptr, nullptr);
             (*pos)++;
         }

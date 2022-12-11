@@ -163,11 +163,7 @@ static void Draw_node_data (FILE *fpout, AST_data* data)
             fprintf (fpout, "%.3lg}", data->data.val);
             break;
 
-        case VAR:
-            fprintf (fpout, "%s}", data->data.obj);
-            break;
-
-        case NVAR:
+        case VAR: NVAR: FUNC: NFUNC:
             fprintf (fpout, "%s}", data->data.obj);
             break;
 
