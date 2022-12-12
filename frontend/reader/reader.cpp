@@ -14,8 +14,21 @@ static Node* Definition_objects (int *pos, const Array_struct *tokens);
 
 static inline int Is_definition (char *cur_token);
 
+//-------------------------------------------------------------------------------
+//RULE: DEFINITION VARIABLE
 
 static Node* Definition_variable (int *pos, const Array_struct *tokens);
+
+//-------------------------------------------------------------------------------
+
+//-------------------------------------------------------------------------------
+//RULE: DEFINITION FUNCTION
+
+static Node* Definition_function (int *pos, const Array_struct *tokens);
+
+static Node* Get_param           (int *pos, const Array_struct *tokens);
+
+//-------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------
 //RULE: EXPRESION
@@ -36,7 +49,6 @@ static Node* Get_priority        (int *pos, const Array_struct *tokens);
 
 //-------------------------------------------------------------------------------
 
-
 //-------------------------------------------------------------------------------
 //RULE: CALL FUNCTION
 
@@ -46,6 +58,11 @@ static Node* Get_arg           (int *pos, const Array_struct *tokens);
 
 //-------------------------------------------------------------------------------
 
+static Node* Get_block (int *pos, const Array_struct *tokens);
+
+static Node* Get_stmt  (int *pos, const Array_struct *tokens);
+
+static Node* Get_assignment (int *pos, const Array_struct *tokens);
 
 static bool Is_reserved_word (char *token);
 
@@ -88,23 +105,20 @@ static Node* Definition_objects (int *pos, const Array_struct *tokens)
 
     if (Is_definition (cur_token))
     {
-        
         node = Create_empty_node ();
         DEF_TYPE (node, DEFS);
         
         (*pos)++;
         
-
         if (!strcmp (cur_token, Name_lang_type_node [NVAR]))
             node->left = Definition_variable (pos, tokens);
         else
-            Dump_func (1);
+            node->left = Definition_function (pos, tokens);
     }
 
     if (Check_nullptr (node))   return nullptr;
 
     cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
-
 
     if (Is_definition (cur_token))
         node->right = Definition_objects (pos, tokens);
@@ -117,6 +131,229 @@ static Node* Definition_objects (int *pos, const Array_struct *tokens)
 static inline int Is_definition (char *token)
 {
     return (!strcmp (token, Name_lang_type_node [NVAR]) || !strcmp (token, Name_lang_type_node [NFUNC]));
+}
+
+//=================================================================================================
+
+static Node* Definition_function (int *pos, const Array_struct *tokens)
+{
+    assert (tokens != nullptr && "tokens is nullptr");
+    assert (pos != nullptr && "pos is nullptr");
+
+    Node *node = Create_empty_node ();
+    DEF_TYPE (node, NFUNC);
+
+    char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+
+    if (Is_reserved_word (cur_token))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "a reserved word \"%s\" has been used as a function name", cur_token);
+        return nullptr;
+    }
+
+    CHANGE_DATA (node, obj, cur_token);
+
+    (*pos)++;
+    cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+
+    if (strcmp (cur_token, "("))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "Definition function must has \'(\' after name.\n"
+                                   "cur_token: %s", cur_token);
+        return nullptr;
+    }
+
+    (*pos)++;
+
+    node->left = Get_param (pos, tokens);
+    cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+
+    Node *tmp_node = node->left;
+    while (!strcmp (cur_token, ","))
+    {
+        (*pos)++;
+
+        tmp_node->right = Get_param (pos, tokens);
+        tmp_node = tmp_node->right;
+
+        cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+    }
+        
+    if (strcmp(cur_token, ")"))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "not \')\' after \'(\',"
+                                    " cur_token: |%s|.\npos = %d", cur_token, *pos);
+        return nullptr;
+    }
+
+    (*pos)++;
+
+    node->right = Get_block (pos, tokens);
+
+    if (Check_nullptr (node->right))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "function body not defined"
+                                    " cur_token: |%s|.\npos = %d", cur_token, *pos);
+        return nullptr;
+    }
+
+    return node;
+}
+
+//=================================================================================================
+
+static Node* Get_param (int *pos, const Array_struct *tokens)
+{
+    assert (tokens != nullptr && "tokens is nullptr");
+    assert (pos != nullptr && "pos is nullptr");
+
+    char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+    
+    if (!Is_name (cur_token)) return nullptr;
+
+    if (Is_reserved_word (cur_token))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "a reserved word \"%s\" has been used as a parameter name", cur_token);
+        return nullptr;
+    }
+
+    Node *node = Create_object_node (cur_token, nullptr, nullptr);
+    DEF_TYPE (node, PARAM);
+
+    (*pos)++;
+
+    return node;
+}
+
+//=================================================================================================
+
+static Node* Get_block (int *pos, const Array_struct *tokens)
+{
+    assert (tokens != nullptr && "tokens is nullptr");
+    assert (pos != nullptr && "pos is nullptr");
+
+    char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+    
+    if (strcmp (cur_token, "{"))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "block must start with {.\n"
+                                   "cur_token: %s, pos = %d", cur_token, *pos);
+        return nullptr;
+    }
+
+    (*pos)++;
+    Node *node = Create_empty_node ();
+    if (Check_nullptr (node))
+    {
+        PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, node is nullptr\n");
+        return nullptr;
+    }
+
+    DEF_TYPE (node, SEQ);
+    node->left = Get_stmt (pos, tokens);
+
+    cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+    
+    Node* tmp_node = node;
+    while (!strcmp (cur_token, ";"))
+    {
+        Node* next_stmt = Create_empty_node ();
+        if (Check_nullptr (next_stmt))
+        {
+            PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, next_stmt is nullptr\n");
+            return nullptr;
+        }
+
+        DEF_TYPE (next_stmt, SEQ);
+        
+        (*pos)++;
+
+        next_stmt->left = Get_stmt (pos, tokens);
+        tmp_node->right = next_stmt;
+        tmp_node = next_stmt;
+
+        cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+    }
+
+
+    if (strcmp (cur_token, "}"))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "block must end with }.\n"
+                                   "cur_token: %s, pos = %d", cur_token, *pos);
+        return nullptr;
+    }
+
+    (*pos)++;
+    
+    return node;
+}
+
+//=================================================================================================
+
+static Node* Get_stmt (int *pos, const Array_struct *tokens)
+{
+    assert (tokens != nullptr && "tokens is nullptr");
+    assert (pos != nullptr && "pos is nullptr");
+
+    Node *node = nullptr;
+    char* cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+
+    if (Is_reserved_word (cur_token))
+    {
+        if (!strcmp (cur_token, Name_lang_type_node [NVAR]))
+        {
+            (*pos)++;
+            node = Definition_variable (pos, tokens);
+            (*pos)--; 
+        }
+    }
+
+    else
+    {
+        node = Get_assignment (pos, tokens);
+    }
+
+    return node;
+}
+
+static Node* Get_assignment (int *pos, const Array_struct *tokens)
+{
+    assert (tokens != nullptr && "tokens is nullptr");
+    assert (pos != nullptr && "pos is nullptr");
+
+    Node *node = nullptr;
+    char* cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+
+    if (!Is_name (cur_token)) 
+        return nullptr;
+
+    (*pos)++;
+
+    char* next_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+    if (strcmp (next_token, "="))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "The variable must be followed by an assignment.\n"
+                                    "cur_token: %s, next_token: %s, pos = %d", cur_token, next_token, *pos);
+        return nullptr;
+    }
+
+    (*pos)++;
+
+    node = Create_empty_node ();
+    DEF_TYPE (node, ASS);
+    CHANGE_DATA (node, obj, cur_token);
+
+    node->right = Parce_expression (pos, tokens);
+    if (Check_nullptr (node->right))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "After \'=\' must not be an emptu token\n"
+                                    "cur_token: %s, next_token: %s, pos = %d", cur_token, next_token, *pos);
+        return nullptr;
+    }
+
+    (*pos)--;
+
+    return node;
 }
 
 //=================================================================================================
@@ -143,11 +380,11 @@ static Node* Definition_variable (int *pos, const Array_struct *tokens)
 
     cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
 
-    if (!strcmp (cur_token, Name_lang_operations [ASS]))
+    if (!strcmp (cur_token, Name_lang_type_node [ASS]))
         (*pos)++;
 
     node->right = Parce_expression (pos, tokens);
-    
+
     return node;
 }
 
@@ -188,15 +425,15 @@ static Node* Get_expression (int *pos, const Array_struct *tokens)
     while (!strcmp (cur_token, Name_lang_operations [ADD]) || 
            !strcmp (cur_token, Name_lang_operations [SUB]))
     {
-        Node* new_node = Create_node ();
-        if (Check_nullptr (new_node))
+        Node* tmp_node = Create_node ();
+        if (Check_nullptr (tmp_node))
         {
-            PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, new node is nullptr\n");
+            PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, tmp_node is nullptr\n");
             return nullptr;
         }
 
-        new_node->left = node;
-        node = new_node;
+        tmp_node->left = node;
+        node = tmp_node;
 
         cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
         (*pos)++;
@@ -237,15 +474,15 @@ static Node* Get_term (int *pos, const Array_struct *tokens)
     while (!strcmp (cur_token, Name_lang_operations[MUL]) || 
            !strcmp (cur_token, Name_lang_operations[DIV]))
     {
-        Node* new_node = Create_node ();
-        if (Check_nullptr (new_node))
+        Node* tmp_node = Create_node ();
+        if (Check_nullptr (tmp_node))
         {
-            PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, new node is nullptr\n");
+            PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, tmp_node is nullptr\n");
             return nullptr;
         }
 
-        new_node->left = node;
-        node = new_node;
+        tmp_node->left = node;
+        node = tmp_node;
 
         cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
         (*pos)++;
@@ -285,15 +522,15 @@ static Node* Get_differentiation (int *pos, const Array_struct *tokens)
     
     if (!strcmp (cur_token, "\'"))
     {
-        Node* new_node = Create_node ();
-        if (Check_nullptr (new_node))
+        Node* tmp_node = Create_node ();
+        if (Check_nullptr (tmp_node))
         {
-            PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, new node is nullptr\n");
+            PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, tmp_node is nullptr\n");
             return nullptr;
         }
 
-        new_node->right = node;
-        node = new_node;
+        tmp_node->right = node;
+        node = tmp_node;
 
         (*pos)++;
         
@@ -355,15 +592,13 @@ static Node* Get_call_function (int *pos, const Array_struct *tokens)
 
     Node* node = Create_empty_node ();
     DEF_TYPE (node, CALL);
+    CHANGE_DATA (node, obj, cur_token);
 
     if (Is_reserved_word (cur_token))
     {
         PROCESS_ERROR (SYNTAX_ERR, "a reserved word \"%s\" has been used as a variable name", cur_token);
         return nullptr;
     }    
-
-    node->left = Create_object_node (cur_token, nullptr, nullptr);
-    DEF_TYPE (node->left, FUNC);
 
     (*pos) += 2;
     cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
@@ -373,19 +608,19 @@ static Node* Get_call_function (int *pos, const Array_struct *tokens)
 
     while (!strcmp (cur_token, ","))
     {
-        Node* new_node = Create_node ();
-        if (Check_nullptr (new_node))
+        Node* tmp_node = Create_node ();
+        if (Check_nullptr (tmp_node))
         {
-            PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, new node is nullptr\n");
+            PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, tmp_node is nullptr\n");
             return nullptr;
         }
 
         (*pos)++;
 
-        new_node = Get_arg (pos, tokens);
+        tmp_node = Get_arg (pos, tokens);
 
-        new_node->right = node->right;
-        node->right = new_node;
+        tmp_node->right = node->right;
+        node->right = tmp_node;
 
         cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
     }

@@ -16,7 +16,9 @@ static void Draw_nodes_recursive (FILE *fpout, const Node *node, int *counter, c
 
 static void Draw_node (FILE *fpout, const Node *node, const int id, const int node_draw_mode);
 
-static void Draw_node_data (FILE *fpout, AST_data* node);
+static void Draw_node_data (FILE *fpout, const AST_data* node);
+
+static const char *Color_selection (const AST_data* data);
 
 //======================================================================================
 
@@ -43,7 +45,6 @@ int Draw_tree_graph (const Tree *tree, const char* name_output_file, const int n
 
     fprintf(graph, "}\n}\n");
     fclose(graph);
-
 
 
     char command_buffer[Max_command_buffer] = {0};
@@ -141,16 +142,12 @@ static void Draw_node (FILE *fpout, const Node *node, const int id, const int no
 
     fprintf (fpout, "}\",");
 
-
-    if (Is_leaf_node (node))
-        fprintf (fpout, " fillcolor=lightgreen ];\n");
-    else
-        fprintf (fpout, " fillcolor=lightgoldenrod1 ];\n");
+    fprintf (fpout, " fillcolor= %s];\n", Color_selection ((AST_data*)node->data));
 
     return;
 }
 
-static void Draw_node_data (FILE *fpout, AST_data* data)
+static void Draw_node_data (FILE *fpout, const AST_data* data)
 {
     assert (fpout != nullptr && "fpout is nullptr");
     assert (data  != nullptr && "AST_data is nullptr");
@@ -163,7 +160,8 @@ static void Draw_node_data (FILE *fpout, AST_data* data)
             fprintf (fpout, "%.3lg}", data->data.val);
             break;
 
-        case VAR: NVAR: FUNC: NFUNC:
+        case VAR: case NVAR: case FUNC: case NFUNC: case CALL: 
+        case PARAM:
             fprintf (fpout, "%s}", data->data.obj);
             break;
 
@@ -181,6 +179,45 @@ static void Draw_node_data (FILE *fpout, AST_data* data)
     }
 
     return;
+}
+
+//======================================================================================
+
+static const char *Color_selection (const AST_data *data)
+{
+    assert (data != nullptr && "AST_data is nullptr");
+
+    switch (data->node_type)
+    {
+        case NUM:
+            return "lightgreen";
+
+        case VAR: case NVAR:     
+            return "hotpink";        
+
+        case FUNC: case NFUNC:  
+             return "darkorchid1";
+
+        case CALL:          
+            return "violet";
+
+        case ARG: case PARAM:
+            return "olivedrab1";
+
+        case OP:            
+            return "lightgoldenrod1";
+
+        case UNKNOWN_T:     
+            return "red";
+
+        case DEFS:          
+            return "skyblue1";
+
+        default:            
+            return "tan";
+    }
+
+    return "black";
 }
 
 //======================================================================================

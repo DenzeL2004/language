@@ -10,6 +10,5 @@ DEF_NODE_OP (AND, 5, "&&")
 DEF_NODE_OP (OR, 6, "||")
 DEF_NODE_OP (NOT, 7, "!")
 
-DEF_NODE_OP (ASS, 8, "nickname")
 
-DEF_NODE_OP (DF, 9, "somersault")
+DEF_NODE_OP (DF, 8, "somersault")

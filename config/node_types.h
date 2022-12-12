@@ -25,4 +25,7 @@ DEF_NODE_TYPE (NUM, 15, "NUM")
 DEF_NODE_TYPE (OP, 16, "OP")
 
 
+DEF_NODE_TYPE (ASS, 17, "nickname")
+
+
 
