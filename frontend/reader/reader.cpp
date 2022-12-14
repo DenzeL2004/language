@@ -47,6 +47,13 @@ static Node* Unique_operation    (int *pos, const Array_struct *tokens);
 
 static Node* Get_priority        (int *pos, const Array_struct *tokens);
 
+
+static Node* Get_logical_not (int *pos, const Array_struct *tokens);
+
+static Node* Get_logical_and (int *pos, const Array_struct *tokens);
+
+static Node* Get_logical_or (int *pos, const Array_struct *tokens);
+
 //-------------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------------
@@ -60,15 +67,26 @@ static Node* Get_arg           (int *pos, const Array_struct *tokens);
 
 static Node* Get_block (int *pos, const Array_struct *tokens);
 
-static Node* Get_stmt  (int *pos, const Array_struct *tokens);
+static Node* Get_statement  (int *pos, const Array_struct *tokens);
 
 static Node* Get_assignment (int *pos, const Array_struct *tokens);
 
-static bool Is_reserved_word (char *token);
+//-------------------------------------------------------------------------------
+//RULE: CALL CONDITION
 
-static inline int Is_num (char *cur_token);
+static Node* Get_condition  (int *pos, const Array_struct *tokens);
 
-static inline int Is_name (char *cur_token);
+static int Is_compar_oper (const char *token);
+
+static Node* Get_branch (int *pos, const Array_struct *tokens);
+
+//-------------------------------------------------------------------------------
+
+static inline bool Is_terminator (const char *token);
+
+static bool Is_reserved_word (const char *token);
+
+static inline int Is_name (const char *cur_token);
 
 //=================================================================================================
 
@@ -250,12 +268,12 @@ static Node* Get_block (int *pos, const Array_struct *tokens)
     }
 
     DEF_TYPE (node, SEQ);
-    node->left = Get_stmt (pos, tokens);
+    node->left = Get_statement (pos, tokens);
 
     cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
     
     Node* tmp_node = node;
-    while (!strcmp (cur_token, ";"))
+    while (strcmp (cur_token, "}"))
     {
         Node* next_stmt = Create_empty_node ();
         if (Check_nullptr (next_stmt))
@@ -265,16 +283,20 @@ static Node* Get_block (int *pos, const Array_struct *tokens)
         }
 
         DEF_TYPE (next_stmt, SEQ);
-        
-        (*pos)++;
 
-        next_stmt->left = Get_stmt (pos, tokens);
+        next_stmt->left = Get_statement (pos, tokens);
+
+        if (Check_nullptr (next_stmt))
+        {
+            PROCESS_ERROR (SYNTAX_ERR, "gone into an endless loop\n");
+            return nullptr;
+        }
+
         tmp_node->right = next_stmt;
         tmp_node = next_stmt;
 
         cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
     }
-
 
     if (strcmp (cur_token, "}"))
     {
@@ -290,12 +312,11 @@ static Node* Get_block (int *pos, const Array_struct *tokens)
 
 //=================================================================================================
 
-static Node* Get_stmt (int *pos, const Array_struct *tokens)
+static Node* Get_statement (int *pos, const Array_struct *tokens)
 {
     assert (tokens != nullptr && "tokens is nullptr");
     assert (pos != nullptr && "pos is nullptr");
 
-    Node *node = nullptr;
     char* cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
 
     if (Is_reserved_word (cur_token))
@@ -303,18 +324,74 @@ static Node* Get_stmt (int *pos, const Array_struct *tokens)
         if (!strcmp (cur_token, Name_lang_type_node [NVAR]))
         {
             (*pos)++;
-            node = Definition_variable (pos, tokens);
-            (*pos)--; 
+            return Definition_variable (pos, tokens);
+        }
+
+        if (!strcmp (cur_token, Name_lang_type_node [WHILE]))
+        {
+            Node *node = Create_empty_node ();
+            DEF_TYPE (node, WHILE);
+            
+            (*pos)++;
+        
+            node->left = Get_condition (pos, tokens);
+            node->right = Get_block (pos, tokens);
+
+            if (Check_nullptr (node->right))
+            {
+                PROCESS_ERROR (SYNTAX_ERR, "No execution command after conditions\n");
+                return nullptr;
+            }
+
+            return node;
+        }
+
+        if (!strcmp (cur_token, Name_lang_type_node [IF]))
+        {
+            Node *node = Create_empty_node ();
+            DEF_TYPE (node, IF);
+
+            (*pos)++;
+        
+            node->left  = Get_condition (pos, tokens);
+            node->right = Get_branch (pos, tokens);
+
+            if (Check_nullptr (node->right))
+            {
+                PROCESS_ERROR (SYNTAX_ERR, "No execution command after conditions\n");
+                return nullptr;
+            }
+
+            return node;
+        }
+
+        if (!strcmp (cur_token, Name_lang_type_node [RET]))
+        {
+            Node *node = Create_empty_node ();
+            DEF_TYPE (node, RET);
+            (*pos)++;
+            
+            node->right = Parce_expression (pos, tokens);
+
+            if (Check_nullptr (node->right))
+            {
+                PROCESS_ERROR (SYNTAX_ERR, "there must always be a return value\n");
+                return nullptr;
+            }
+
+            return node;
         }
     }
 
     else
     {
-        node = Get_assignment (pos, tokens);
+        return Get_assignment (pos, tokens);
     }
 
-    return node;
+    return nullptr;
 }
+
+//=================================================================================================
 
 static Node* Get_assignment (int *pos, const Array_struct *tokens)
 {
@@ -330,7 +407,7 @@ static Node* Get_assignment (int *pos, const Array_struct *tokens)
     (*pos)++;
 
     char* next_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
-    if (strcmp (next_token, "="))
+    if (strcmp (next_token, Name_lang_type_node [ASS]))
     {
         PROCESS_ERROR (SYNTAX_ERR, "The variable must be followed by an assignment.\n"
                                     "cur_token: %s, next_token: %s, pos = %d", cur_token, next_token, *pos);
@@ -346,14 +423,101 @@ static Node* Get_assignment (int *pos, const Array_struct *tokens)
     node->right = Parce_expression (pos, tokens);
     if (Check_nullptr (node->right))
     {
-        PROCESS_ERROR (SYNTAX_ERR, "After \'=\' must not be an emptu token\n"
+        PROCESS_ERROR (SYNTAX_ERR, "After assignment must not be an emptu token\n"
                                     "cur_token: %s, next_token: %s, pos = %d", cur_token, next_token, *pos);
         return nullptr;
     }
 
-    (*pos)--;
+    return node;
+}
+
+//=================================================================================================
+
+static Node* Get_condition (int *pos, const Array_struct *tokens)
+{
+    assert (tokens != nullptr && "tokens is nullptr");
+    assert (pos != nullptr && "pos is nullptr");
+
+    char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+
+    if (strcmp (cur_token, "(")) 
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "The condition must start with \'(\'");
+        return nullptr;
+    }
+
+    (*pos)++;
+
+    Node *node = Get_logical_or (pos, tokens);
+   
+    cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+    
+    if (Is_compar_oper (cur_token))
+    {
+        Node* tmp_node = Create_operation_node (Is_compar_oper (cur_token), nullptr, nullptr);
+        if (Check_nullptr (tmp_node))
+        {
+            PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, tmp_node is nullptr\n");
+            return nullptr;
+        }
+
+        (*pos)++;
+        tmp_node->right = Get_logical_or (pos, tokens);
+        tmp_node->left  = node;
+        node            = tmp_node;
+    }
+
+    cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+
+    if (strcmp (cur_token, ")")) 
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "The condition must end by \')\'");
+        return nullptr;
+    }
+
+    (*pos)++;
 
     return node;
+}
+
+//=================================================================================================
+
+static Node* Get_branch (int *pos, const Array_struct *tokens)
+{
+    assert (tokens != nullptr && "tokens is nullptr");
+    assert (pos != nullptr && "pos is nullptr");
+
+    Node *node = Create_empty_node ();
+    DEF_TYPE (node, BRANCH);
+
+    node->left = Get_block (pos, tokens);
+
+    char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+    if (!strcmp (cur_token, Name_lang_type_node [ELSE]))
+    {
+        (*pos)++;
+        node->right = Get_block (pos, tokens);
+    }
+
+    return node;
+}
+
+//=================================================================================================
+
+static int Is_compar_oper (const char *token)
+{
+    assert (token != nullptr && "token is nullptr");
+
+    if (!strcmp (token, Name_lang_operations [MORE]))    return MORE;
+    if (!strcmp (token, Name_lang_operations [NOTMORE])) return NOTMORE;
+
+    if (!strcmp (token, Name_lang_operations [LESS]))    return LESS;
+    if (!strcmp (token, Name_lang_operations [NOTLESS])) return NOTLESS;
+    
+    if (!strcmp (token, Name_lang_operations [EQ]))    return MORE;
+    if (!strcmp (token, Name_lang_operations [NOTEQ])) return MORE;
+
+    return 0;
 }
 
 //=================================================================================================
@@ -395,11 +559,11 @@ static Node* Parce_expression (int *pos, const Array_struct *tokens)
     assert (tokens != nullptr && "tokens is nullptr");
     assert (pos != nullptr && "pos is nullptr");
 
-    Node *node = Get_expression (pos, tokens);
+    Node *node = Get_logical_or (pos, tokens);
 
     char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
 
-    if (strcmp (cur_token, ";"))
+    if (!Is_terminator (cur_token))
     {
         PROCESS_ERROR (SYNTAX_ERR, "Expression does not end \';\'.\n"
                                    "Current token: \'%s\', pos = %d.", cur_token, *pos);
@@ -407,6 +571,74 @@ static Node* Parce_expression (int *pos, const Array_struct *tokens)
     }
 
     (*pos)++;
+
+    return node;
+}
+
+//=================================================================================================
+
+static Node* Get_logical_or (int *pos, const Array_struct *tokens)
+{
+    assert (tokens != nullptr && "tokens is nullptr");
+    assert (pos != nullptr && "pos is nullptr");
+
+    Node* node = Get_logical_and (pos, tokens);
+
+    char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+ 
+    while (!strcmp (cur_token, Name_lang_operations [OR]))
+    {
+        Node* tmp_node = Create_node ();
+        if (Check_nullptr (tmp_node))
+        {
+            PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, tmp_node is nullptr\n");
+            return nullptr;
+        }
+
+        tmp_node->left = node;
+        node = tmp_node;
+
+        (*pos)++;
+
+        node->right = Get_logical_and (pos, tokens);
+
+        node = Create_operation_node (OR, node->left, node->right);   
+        cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+    }
+
+    return node;
+}
+
+//=================================================================================================
+
+static Node* Get_logical_and (int *pos, const Array_struct *tokens)
+{
+    assert (tokens != nullptr && "tokens is nullptr");
+    assert (pos != nullptr && "pos is nullptr");
+
+    Node* node = Get_expression (pos, tokens);
+
+    char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+ 
+    while (!strcmp (cur_token, Name_lang_operations [AND]))
+    {
+        Node* tmp_node = Create_node ();
+        if (Check_nullptr (tmp_node))
+        {
+            PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, tmp_node is nullptr\n");
+            return nullptr;
+        }
+
+        tmp_node->left = node;
+        node = tmp_node;
+
+        (*pos)++;
+
+        node->right = Get_expression (pos, tokens);
+
+        node = Create_operation_node (AND, node->left, node->right);   
+        cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+    }
 
     return node;
 }
@@ -438,13 +670,6 @@ static Node* Get_expression (int *pos, const Array_struct *tokens)
         cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
         (*pos)++;
 
-        node->right = Create_node ();
-        if (Check_nullptr (node->right))
-        {
-            PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, right son is nullptr\n");
-            return nullptr;
-        }
-
         node->right = Get_term (pos, tokens);
 
         if (!strcmp (cur_token, Name_lang_operations[ADD]))
@@ -466,7 +691,6 @@ static Node* Get_term (int *pos, const Array_struct *tokens)
     assert (tokens != nullptr && "tokens is nullptr");
     assert (pos != nullptr && "pos is nullptr");
 
-
     Node* node = Get_differentiation (pos, tokens);
 
     char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
@@ -486,13 +710,6 @@ static Node* Get_term (int *pos, const Array_struct *tokens)
 
         cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
         (*pos)++;
-
-        node->right = Create_node ();
-        if (Check_nullptr (node->right))
-        {
-            PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, right son is nullptr\n");
-            return nullptr;
-        }
 
         node->right = Get_differentiation (pos, tokens);
 
@@ -520,7 +737,7 @@ static Node* Get_differentiation (int *pos, const Array_struct *tokens)
 
     char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
     
-    if (!strcmp (cur_token, "\'"))
+    if (!strcmp (cur_token, Name_lang_operations [DF]))
     {
         Node* tmp_node = Create_node ();
         if (Check_nullptr (tmp_node))
@@ -551,6 +768,29 @@ static Node* Unique_operation (int *pos, const Array_struct *tokens)
 
     char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
 
+    if (!strcmp (cur_token, Name_lang_operations [SUB]))
+    {
+        node = Create_operation_node (MUL, nullptr, nullptr);
+        node->left = Create_value_node (-1, nullptr, nullptr);
+
+        (*pos)++;
+        node->right = Get_priority (pos, tokens);
+
+        if (Check_nullptr (node->right))
+        {
+            PROCESS_ERROR (SYNTAX_ERR, "After unary minus must be num/var/(expression)\n");
+            return nullptr;
+        }
+
+        return node;
+    }
+
+    if (!strcmp (cur_token, Name_lang_operations [NOT]))
+    {
+        node = Get_logical_not (pos, tokens);
+        return node;
+    }
+
     if (Is_name (cur_token))
     {
         char *next_token = (char*) Array_get_ptr_by_ind (tokens, *pos + 1);
@@ -559,25 +799,29 @@ static Node* Unique_operation (int *pos, const Array_struct *tokens)
             return Get_call_function (pos, tokens);
     }
 
-    if (!strcmp (cur_token, Name_lang_operations [SUB]))
-    {
-        (*pos)++;
-
-        node = Create_operation_node (MUL, nullptr, nullptr);
-        node->left = Create_value_node (-1, nullptr, nullptr);
-        node->right = Get_priority (pos, tokens);
-
-        if (Check_nullptr (node->right))
-        {
-            PROCESS_ERROR (SYNTAX_ERR, "After unary minus must be num/var/expression");
-            return nullptr;
-        }
-
-        return node;
-    }
-
     node = Get_priority (pos, tokens);
 
+    return node;
+}
+
+//=================================================================================================
+
+static Node* Get_logical_not (int *pos, const Array_struct *tokens)
+{
+    assert (tokens != nullptr && "tokens is nullptr");
+    assert (pos != nullptr && "pos is nullptr");
+
+    Node *node = Create_operation_node (NOT, nullptr, nullptr);
+
+    (*pos)++;
+    node->right = Get_priority (pos, tokens);
+
+    if (Check_nullptr (node->right))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "After operation not must be num/var/(expression)\n");
+        return nullptr;
+    }
+    
     return node;
 }
 
@@ -625,7 +869,6 @@ static Node* Get_call_function (int *pos, const Array_struct *tokens)
         cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
     }
         
-
     if (strcmp(cur_token, ")"))
     {
         PROCESS_ERROR (SYNTAX_ERR, "not \')\' after \'(\',"
@@ -668,7 +911,7 @@ static Node* Get_priority (int *pos, const Array_struct *tokens)
     {
         (*pos)++;
 
-        node = Get_expression (pos, tokens);
+        node = Get_logical_or (pos, tokens);
 
         cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
 
@@ -684,7 +927,7 @@ static Node* Get_priority (int *pos, const Array_struct *tokens)
 
     else
     {
-        if (Is_num (cur_token))
+        if (isdigit (cur_token[0]))
         {
             double val = strtod (cur_token, nullptr);
             if (errno == ERANGE)
@@ -713,7 +956,7 @@ static Node* Get_priority (int *pos, const Array_struct *tokens)
 
 //=================================================================================================
 
-static bool Is_reserved_word (char *token)
+static bool Is_reserved_word (const char *token)
 {
     assert (token != nullptr && "token is nullptr");
 
@@ -738,21 +981,20 @@ static bool Is_reserved_word (char *token)
 
 //=================================================================================================
 
-static inline int Is_num (char *token)
+static inline int Is_name (const char *token)
 {
     assert (token != nullptr && "token is nullptr");
 
-    return ((token[0] != '\0') && (token[0] >= '0') && (token[0] <= '9'));
+    return (isalpha (token[0]) || token[0] == '_');
 }
 
 //=================================================================================================
 
-static inline int Is_name (char *token)
+static inline bool Is_terminator (const char *token)
 {
     assert (token != nullptr && "token is nullptr");
-
-    return ((token[0] != '\0') && (((token[0] >= 'a') && (token[0] <= 'z')) ||
-                                   ((token[0] >= 'A') && (token[0] <= 'Z'))));
-}
+    
+    return (!strcmp (token, ";"));    
+} 
 
 //=================================================================================================

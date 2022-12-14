@@ -9,7 +9,7 @@ DEF_NODE_TYPE (BLOCK, 4, "BLOCK")
 DEF_NODE_TYPE (SEQ, 5, "SEQ")
 
 
-DEF_NODE_TYPE (IF, 6, "IF")
+DEF_NODE_TYPE (IF, 6, "if")
 DEF_NODE_TYPE (BRANCH, 7, "BRANCH")
 
 DEF_NODE_TYPE (WHILE, 8, "goodBoy")
@@ -26,6 +26,8 @@ DEF_NODE_TYPE (OP, 16, "OP")
 
 
 DEF_NODE_TYPE (ASS, 17, "nickname")
+
+DEF_NODE_TYPE (ELSE, 18,   "else")
 
 
 

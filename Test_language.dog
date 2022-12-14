@@ -1,0 +1,28 @@
+learnComand main (a, b, cd)
+{
+    breed sharpei nickname 2;
+    breed golden_retriver nickname 2;
+
+    dog2 nickname sharpei lick golden_retriver scratch 12 and (123 or 123);
+
+    if (sharpei more 21)
+    {
+        golden_retriver nickname 12;
+    }
+    else
+    {
+        sharpei nickname 0;
+    }
+
+    goodBoy (sharpei less 21)
+    {
+        breed doga nickname 0;
+        sharpei nickname sharpei lick doga;
+        doga nickname doga bite 1;
+    }
+
+    doga  nickname doga lick 1;
+
+
+    bring doga lick dog2;
+}

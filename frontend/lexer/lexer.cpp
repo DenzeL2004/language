@@ -65,7 +65,7 @@ static char* Cut_word (const char **buffer)
 
     int len_word = 0;
 
-    while (isalnum (**buffer))
+    while (isalnum (**buffer) || **buffer == '_')
     {
         len_word++;
         (*buffer)++;

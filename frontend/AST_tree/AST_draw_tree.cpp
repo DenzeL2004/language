@@ -113,7 +113,6 @@ static void Draw_node (FILE *fpout, const Node *node, const int id, const int no
 
     char *ch_ptr = (char*) node;
 
-
     fprintf (fpout, "node%p [style=filled, shape = record, label =  \"{", ch_ptr);
 
     if (node_draw_mode & (1 << DRAW_ID))
@@ -157,11 +156,11 @@ static void Draw_node_data (FILE *fpout, const AST_data* data)
     switch (data->node_type)
     {
         case NUM:
-            fprintf (fpout, "%.3lg}", data->data.val);
+            fprintf (fpout, "%.3lf}", data->data.val);
             break;
 
         case VAR: case NVAR: case FUNC: case NFUNC: case CALL: 
-        case PARAM:
+        case PARAM: case ASS: 
             fprintf (fpout, "%s}", data->data.obj);
             break;
 
@@ -201,11 +200,20 @@ static const char *Color_selection (const AST_data *data)
         case CALL:          
             return "violet";
 
+        case ASS:          
+            return "orange";
+
         case ARG: case PARAM:
             return "olivedrab1";
 
         case OP:            
             return "lightgoldenrod1";
+
+        case IF: case BRANCH:            
+            return "cyan";
+
+        case WHILE:            
+            return "aquamarine";
 
         case UNKNOWN_T:     
             return "red";
@@ -214,7 +222,7 @@ static const char *Color_selection (const AST_data *data)
             return "skyblue1";
 
         default:            
-            return "tan";
+            return "lightsteelblue1";
     }
 
     return "black";
