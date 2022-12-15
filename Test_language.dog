@@ -1,27 +1,10 @@
-learnComand main (a, b, cd)
+learnComand Dump2 ()
 {
-    breed sharpei nickname 2;
-    breed golden_retriver nickname 2;
-
-    dog2 nickname sharpei lick golden_retriver scratch 12 and (123 or 123);
-
-    if (a less b)
-        bring doga;    
-
-    goodBoy (sharpei less 21)
-    {
-        breed doga nickname 0;
-        sharpei nickname sharpei lick doga;
-        doga nickname doga bite 1;
-    }
-
-    doga  nickname doga lick 1;
-
-
-    bring doga lick dog2;
+    bring 10;
 }
 
-learnComand Dump (a, b, c, d, vif)
+learnComand main ()
 {
-
+    Dump2 (a, b, c);
+    bring 10;
 }

@@ -10,6 +10,8 @@ static const int Mask_draw_node_modes = (1 << 4) - 1;
 enum Draw_tree_func_err
 {
     TREE_DRAW_GRAPH_ERR     = -1,
+
+    DRAW_DATABASE_ERR       = -4,
 };
 
 enum Tree_node_draw_modes
@@ -26,5 +28,7 @@ enum Tree_node_draw_modes
 
 int Draw_tree_graph (const Tree *tree, const char* name_output_file, 
                      const int node_draw_mode = Mask_draw_node_modes);
+
+int Draw_database (Tree *tree, const int node_mode = Mask_draw_node_modes);
 
 #endif  //#endif _AST_DRAW_TREE_H_

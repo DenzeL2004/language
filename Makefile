@@ -28,16 +28,16 @@ obj/frontend.o: $(FRONT_DIR)/frontend.cpp config/language_config.h	\
 
 
 
-obj/AST_tree.o: $(FRONT_DIR)/AST_tree/AST_tree.cpp config/language_config.h		\
-				$(FRONT_DIR)/AST_tree/AST_tree.h
+obj/AST_tree.o: config/AST_tree/AST_tree.cpp config/language_config.h		\
+				config/AST_tree/AST_tree.h
 				
-	g++ $(FRONT_DIR)/AST_tree/AST_tree.cpp -c -o obj/AST_tree.o $(FLAGS)
+	g++ config/AST_tree/AST_tree.cpp -c -o obj/AST_tree.o $(FLAGS)
 
 
-obj/AST_draw_tree.o:  $(FRONT_DIR)/AST_tree/AST_tree.cpp $(FRONT_DIR)/AST_tree/AST_draw_tree.cpp config/language_config.h	\
-				  	  $(FRONT_DIR)/AST_tree/AST_tree.h   $(FRONT_DIR)/AST_tree/AST_draw_tree.h	 
+obj/AST_draw_tree.o:  config/AST_tree/AST_tree.cpp config/AST_tree/AST_draw_tree.cpp config/language_config.h	\
+				  	  config/AST_tree/AST_tree.h   config/AST_tree/AST_draw_tree.h	 
 					   	
-	g++ $(FRONT_DIR)/AST_tree/AST_draw_tree.cpp -c -o obj/AST_draw_tree.o $(FLAGS)
+	g++ config/AST_tree/AST_draw_tree.cpp -c -o obj/AST_draw_tree.o $(FLAGS)
 
 
 obj/lexer.o: $(FRONT_DIR)/lexer/lexer.cpp $(FRONT_DIR)/lexer/lexer.cpp	

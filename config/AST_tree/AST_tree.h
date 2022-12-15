@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-#include "../../config/language_config.h"
+#include "../language_config.h"
 
 #include "../../src/tree/tree.h"
 

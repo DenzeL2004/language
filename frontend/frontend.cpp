@@ -12,13 +12,12 @@
 #include "../src/process_text/process_text.h"
 
 
-#include "AST_tree/AST_tree.h"
-#include "AST_tree/AST_draw_tree.h"
-
 #include "lexer/lexer.h"
 #include "reader/reader.h"
 
 static int Check_file_extension (const char *name_file);
+
+static int Write_node_ast_format (FILE *fpout, const Node *node, const int shift = 0);
 
 //======================================================================================================
 
@@ -96,7 +95,7 @@ int Read_source_file (Frontend_struct *frontend_struct, const char *name_input_f
     int result_parce = Parce_source_file (&frontend_struct->ast_tree, 
                                           &frontend_struct->tokens, frontend_struct->cnt_tokens);
     
-    #ifdef LOOK_AST_TREE
+    #ifdef LOOK_FRONTEND_AST_TREE_
         Draw_database (&frontend_struct->ast_tree);
     #endif
     
@@ -108,32 +107,6 @@ int Read_source_file (Frontend_struct *frontend_struct, const char *name_input_f
 
 //======================================================================================================
 
-int Draw_database (Tree *tree, const int node_mode)
-{
-    assert (tree != nullptr && "tree is nullptr");
-
-    static int Cnt_graphs = 0;      //<-To display the current tree view
-
-    char name_output_file[Max_command_buffer] = "";
-    sprintf (name_output_file, "graph_img\\picture%d.png", Cnt_graphs); 
-
-    Cnt_graphs++;
-
-    if (Draw_tree_graph (tree, name_output_file, node_mode))
-        return PROCESS_ERROR (DRAW_DATABASE_ERR, "Error in graph drawing\n");
-
-    char command_buffer[Max_command_buffer] = {0};
-    sprintf(command_buffer, "@temp\\%s", name_output_file);
-
-    if (system (command_buffer))
-        return PROCESS_ERROR (DRAW_DATABASE_ERR, "Failed to open image\n");
-
-    return 0;
-}
-
-
-//======================================================================================================
-
 static int Check_file_extension (const char *name_file)
 {
     assert (name_file != nullptr && "name_file is nullptr");
@@ -141,6 +114,62 @@ static int Check_file_extension (const char *name_file)
     int len_str = strlen (name_file);
 
     return strncmp (name_file + (len_str - 4), Extension, 4);
+}
+
+//======================================================================================================
+
+int Write_database (const Tree *tree)
+{
+    assert (tree != nullptr && "tree is nullptr");
+
+    FILE *fpout = Open_file_ptr (ast_format_file, "w");
+    if (Check_nullptr (fpout))
+        return PROCESS_ERROR (ERR_FILE_OPEN, "Opening the output file\n");
+
+    Write_node_ast_format (fpout, tree->root);
+
+    return 0;
+}
+
+//======================================================================================================
+
+static int Write_node_ast_format (FILE *fpout, const Node *node, const int shift)
+{
+    assert (fpout != nullptr && "fpout is nullptr");
+    
+    if (Check_nullptr ((char*) node))
+    {
+        fprintf (fpout, "%*c{}", shift, ' ');
+        return 0;
+    }
+
+    AST_data* ast_data = (AST_data*) node->data;
+
+    fprintf (fpout, "%*c{ %s, ", shift, ' ', Name_type_node [ast_data->node_type]);
+    
+    if (ast_data->node_type == NUM)
+        fprintf (fpout, "%.3lf, ", ast_data->data.val);
+    
+    else if (ast_data->node_type == OP)
+        fprintf (fpout, "%s, ", Name_operations [ast_data->data.operation]);
+
+    else 
+        if (Check_nullptr ((char*) ast_data->data.obj))
+            fprintf (fpout, "NULL, ");
+        else
+            fprintf (fpout, "%s, ", ast_data->data.obj);
+
+    fprintf (fpout, "\n");
+    
+    Write_node_ast_format (fpout, node->left, shift + 3);
+    fprintf (fpout, ",\n");
+
+    Write_node_ast_format (fpout, node->right, shift + 3);
+    fprintf (fpout, "\n");
+
+    fprintf (fpout, "%*c}", shift, ' ');
+
+    return 0;
 }
 
 //======================================================================================================

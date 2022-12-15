@@ -20,6 +20,32 @@ static void Draw_node_data (FILE *fpout, const AST_data* node);
 
 static const char *Color_selection (const AST_data* data);
 
+
+//======================================================================================================
+
+int Draw_database (Tree *tree, const int node_mode)
+{
+    assert (tree != nullptr && "tree is nullptr");
+
+    static int Cnt_graphs = 0;      //<-To display the current tree view
+
+    char name_output_file[Max_command_buffer] = "";
+    sprintf (name_output_file, "graph_img\\picture%d.png", Cnt_graphs); 
+
+    Cnt_graphs++;
+
+    if (Draw_tree_graph (tree, name_output_file, node_mode))
+        return PROCESS_ERROR (DRAW_DATABASE_ERR, "Error in graph drawing\n");
+
+    char command_buffer[Max_command_buffer] = {0};
+    sprintf(command_buffer, "@temp\\%s", name_output_file);
+
+    if (system (command_buffer))
+        return PROCESS_ERROR (DRAW_DATABASE_ERR, "Failed to open image\n");
+
+    return 0;
+}
+
 //======================================================================================
 
 int Draw_tree_graph (const Tree *tree, const char* name_output_file, const int node_draw_mode)

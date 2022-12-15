@@ -3,6 +3,8 @@
 
 #include "language_dsl.h"
 
+static const char *ast_format_file = "ast_tree.txt";
+
 //================================================================================================
 
 #define DEF_NODE_TYPE(name, num, ...)    \         
