@@ -5,14 +5,8 @@ learnComand main (a, b, cd)
 
     dog2 nickname sharpei lick golden_retriver scratch 12 and (123 or 123);
 
-    if (sharpei more 21)
-    {
-        golden_retriver nickname 12;
-    }
-    else
-    {
-        sharpei nickname 0;
-    }
+    if (a less b)
+        bring doga;    
 
     goodBoy (sharpei less 21)
     {
@@ -25,4 +19,9 @@ learnComand main (a, b, cd)
 
 
     bring doga lick dog2;
+}
+
+learnComand Dump (a, b, c, d, vif)
+{
+
 }

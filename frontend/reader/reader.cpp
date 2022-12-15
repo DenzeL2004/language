@@ -72,7 +72,7 @@ static Node* Get_statement  (int *pos, const Array_struct *tokens);
 static Node* Get_assignment (int *pos, const Array_struct *tokens);
 
 //-------------------------------------------------------------------------------
-//RULE: CALL CONDITION
+//RULE: CONDITION
 
 static Node* Get_condition  (int *pos, const Array_struct *tokens);
 
@@ -126,15 +126,11 @@ static Node* Definition_objects (int *pos, const Array_struct *tokens)
         node = Create_empty_node ();
         DEF_TYPE (node, DEFS);
         
-        (*pos)++;
-        
         if (!strcmp (cur_token, Name_lang_type_node [NVAR]))
             node->left = Definition_variable (pos, tokens);
         else
             node->left = Definition_function (pos, tokens);
     }
-
-    if (Check_nullptr (node))   return nullptr;
 
     cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
 
@@ -158,10 +154,15 @@ static Node* Definition_function (int *pos, const Array_struct *tokens)
     assert (tokens != nullptr && "tokens is nullptr");
     assert (pos != nullptr && "pos is nullptr");
 
+    char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+    if (strcmp (cur_token, Name_lang_type_node [NFUNC])) return nullptr;
+   
+    (*pos)++;
+
     Node *node = Create_empty_node ();
     DEF_TYPE (node, NFUNC);
-
-    char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+    
+    cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
 
     if (Is_reserved_word (cur_token))
     {
@@ -200,7 +201,7 @@ static Node* Definition_function (int *pos, const Array_struct *tokens)
     if (strcmp(cur_token, ")"))
     {
         PROCESS_ERROR (SYNTAX_ERR, "not \')\' after \'(\',"
-                                    " cur_token: |%s|.\npos = %d", cur_token, *pos);
+                                    " cur_token: |%s|.\n", cur_token);
         return nullptr;
     }
 
@@ -211,7 +212,7 @@ static Node* Definition_function (int *pos, const Array_struct *tokens)
     if (Check_nullptr (node->right))
     {
         PROCESS_ERROR (SYNTAX_ERR, "function body not defined"
-                                    " cur_token: |%s|.\npos = %d", cur_token, *pos);
+                                    " last_token: |%s|.\n", (char*) Array_get_ptr_by_ind (tokens, *pos));
         return nullptr;
     }
 
@@ -255,7 +256,7 @@ static Node* Get_block (int *pos, const Array_struct *tokens)
     if (strcmp (cur_token, "{"))
     {
         PROCESS_ERROR (SYNTAX_ERR, "block must start with {.\n"
-                                   "cur_token: %s, pos = %d", cur_token, *pos);
+                                   "cur_token: %s", cur_token);
         return nullptr;
     }
 
@@ -286,9 +287,9 @@ static Node* Get_block (int *pos, const Array_struct *tokens)
 
         next_stmt->left = Get_statement (pos, tokens);
 
-        if (Check_nullptr (next_stmt))
+        if (Check_nullptr (next_stmt->left))
         {
-            PROCESS_ERROR (SYNTAX_ERR, "gone into an endless loop\n");
+            PROCESS_ERROR (SYNTAX_ERR, "gone into an endless loop. cur_token: %s\n", cur_token);
             return nullptr;
         }
 
@@ -301,7 +302,7 @@ static Node* Get_block (int *pos, const Array_struct *tokens)
     if (strcmp (cur_token, "}"))
     {
         PROCESS_ERROR (SYNTAX_ERR, "block must end with }.\n"
-                                   "cur_token: %s, pos = %d", cur_token, *pos);
+                                   "cur_token: %s", cur_token);
         return nullptr;
     }
 
@@ -322,10 +323,7 @@ static Node* Get_statement (int *pos, const Array_struct *tokens)
     if (Is_reserved_word (cur_token))
     {
         if (!strcmp (cur_token, Name_lang_type_node [NVAR]))
-        {
-            (*pos)++;
             return Definition_variable (pos, tokens);
-        }
 
         if (!strcmp (cur_token, Name_lang_type_node [WHILE]))
         {
@@ -335,11 +333,13 @@ static Node* Get_statement (int *pos, const Array_struct *tokens)
             (*pos)++;
         
             node->left = Get_condition (pos, tokens);
-            node->right = Get_block (pos, tokens);
+            
+            node->right = Get_statement (pos, tokens);
 
             if (Check_nullptr (node->right))
             {
-                PROCESS_ERROR (SYNTAX_ERR, "No execution command after conditions\n");
+                PROCESS_ERROR (SYNTAX_ERR, "No execution command after conditions,"
+                                           " cur_token: %s\n", cur_token);
                 return nullptr;
             }
 
@@ -358,7 +358,8 @@ static Node* Get_statement (int *pos, const Array_struct *tokens)
 
             if (Check_nullptr (node->right))
             {
-                PROCESS_ERROR (SYNTAX_ERR, "No execution command after conditions\n");
+                PROCESS_ERROR (SYNTAX_ERR, "No execution command after conditions,"
+                                           " cur_token: %s\n", cur_token);
                 return nullptr;
             }
 
@@ -385,6 +386,11 @@ static Node* Get_statement (int *pos, const Array_struct *tokens)
 
     else
     {
+        if (!strcmp (cur_token, "{"))
+        {
+            return Get_block (pos, tokens);
+        }
+
         return Get_assignment (pos, tokens);
     }
 
@@ -439,7 +445,6 @@ static Node* Get_condition (int *pos, const Array_struct *tokens)
     assert (pos != nullptr && "pos is nullptr");
 
     char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
-
     if (strcmp (cur_token, "(")) 
     {
         PROCESS_ERROR (SYNTAX_ERR, "The condition must start with \'(\'");
@@ -471,7 +476,8 @@ static Node* Get_condition (int *pos, const Array_struct *tokens)
 
     if (strcmp (cur_token, ")")) 
     {
-        PROCESS_ERROR (SYNTAX_ERR, "The condition must end by \')\'");
+        PROCESS_ERROR (SYNTAX_ERR, "The condition must end by \')\',"
+                                   " cur_token: %s\n", cur_token);
         return nullptr;
     }
 
@@ -490,13 +496,13 @@ static Node* Get_branch (int *pos, const Array_struct *tokens)
     Node *node = Create_empty_node ();
     DEF_TYPE (node, BRANCH);
 
-    node->left = Get_block (pos, tokens);
+    node->left = Get_statement (pos, tokens);
 
     char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
     if (!strcmp (cur_token, Name_lang_type_node [ELSE]))
     {
         (*pos)++;
-        node->right = Get_block (pos, tokens);
+        node->right = Get_statement (pos, tokens);
     }
 
     return node;
@@ -527,10 +533,16 @@ static Node* Definition_variable (int *pos, const Array_struct *tokens)
     assert (tokens != nullptr && "tokens is nullptr");
     assert (pos != nullptr && "pos is nullptr");
 
+    char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+
+    if (strcmp (cur_token, Name_lang_type_node [NVAR])) return nullptr;
+   
+    (*pos)++;
+
     Node *node = Create_empty_node ();
     DEF_TYPE (node, NVAR);
 
-    char *cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
+    cur_token = (char*) Array_get_ptr_by_ind (tokens, *pos);
 
     if (Is_reserved_word (cur_token))
     {
