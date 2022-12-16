@@ -1,0 +1,10 @@
+learnComand Dump2 ()
+{
+    bring 10;
+}
+
+learnComand main ()
+{
+    Dump2 (a, b, c);
+    bring 10;
+}
