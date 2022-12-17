@@ -1,10 +1,7 @@
-learnComand Dump2 (a)
-{
-    bring 10;
-}
-
 learnComand main ()
 {
-    Dump2 (10 lick 10, 20, 30);
-    bring 10;
+    breed a nickname 10;
+    breed b nickname 20;
+
+    a nickname a scratch b;
 }

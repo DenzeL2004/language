@@ -250,7 +250,7 @@ static Node* Get_param (int *pos, const Array_struct *tokens)
     if (!strcmp (cur_token, ","))
     {
         (*pos)++;
-        node->left = Get_param (pos, tokens);
+        node->right = Get_param (pos, tokens);
     }
 
     return node;
@@ -274,14 +274,14 @@ static Node* Read_block (int *pos, const Array_struct *tokens)
 
     (*pos)++;
     Node *node = Create_empty_node ();
+
     if (Check_nullptr (node))
     {
         PROCESS_ERROR (ERR_MEMORY_ALLOC, "Memory allocation error, node is nullptr\n");
         return nullptr;
     }
 
-    DEF_TYPE (node, SEQ);
-    node->left = Read_statement (pos, tokens);
+    DEF_TYPE (node, BLOCK);
 
     cur_token = GET_TOKEN (*pos);
     
@@ -457,9 +457,9 @@ static Node* Read_return (int *pos, const Array_struct *tokens)
     DEF_TYPE (node, RET);
     (*pos)++;
     
-    node->left = Parce_expression (pos, tokens);
+    node->right = Parce_expression (pos, tokens);
 
-    if (Check_nullptr (node->left))
+    if (Check_nullptr (node->right))
     {
         PROCESS_ERROR (SYNTAX_ERR, "there must always be a return value\n");
         return nullptr;
@@ -497,8 +497,8 @@ static Node* Read_assignment (int *pos, const Array_struct *tokens)
     DEF_TYPE (node, ASS);
     CHANGE_DATA (node, obj, cur_token);
 
-    node->left = Parce_expression (pos, tokens);
-    if (Check_nullptr (node->left))
+    node->right = Parce_expression (pos, tokens);
+    if (Check_nullptr (node->right))
     {
         PROCESS_ERROR (SYNTAX_ERR, "After assignment must not be an emptu token\n"
                                     "cur_token: %s, next_token: %s, pos = %d", cur_token, next_token, *pos);
@@ -874,9 +874,9 @@ static Node* Get_logical_not (int *pos, const Array_struct *tokens)
     Node *node = Create_operation_node (NOT, nullptr, nullptr);
 
     (*pos)++;
-    node->left = Get_priority (pos, tokens);
+    node->right = Get_priority (pos, tokens);
 
-    if (Check_nullptr (node->left))
+    if (Check_nullptr (node->right))
     {
         PROCESS_ERROR (SYNTAX_ERR, "After operation not must be num/var/(expression)\n");
         return nullptr;
@@ -906,7 +906,7 @@ static Node* Call_function (int *pos, const Array_struct *tokens)
 
     (*pos) += 2;
 
-    node->left = Get_arg (pos, tokens);
+    node->right = Get_arg (pos, tokens);
     cur_token = GET_TOKEN (*pos);
 
     while (!strcmp (cur_token, ","))
@@ -922,8 +922,8 @@ static Node* Call_function (int *pos, const Array_struct *tokens)
 
         tmp_node = Get_arg (pos, tokens);
 
-        tmp_node->right = node->left;
-        node->left = tmp_node;
+        tmp_node->right = node->right;
+        node->right = tmp_node;
 
         cur_token = GET_TOKEN (*pos);
     }

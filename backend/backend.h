@@ -7,6 +7,8 @@
 #include "../config/language_config.h"
 #include "../config/language_dsl.h"
 
+#include "../src/name_table/name_table.h"
+
 enum Backend_func_err
 {
     READ_AST_FORMAT     = -1,
@@ -17,7 +19,24 @@ enum Backend_func_err
 
     INVALID_CALL        = -4,
     COMPILATION_ERR     = -5,
+
+    NAMESPACE_CTOR_ERR  = -6,
+    NAMESPACE_DTOR_ERR  = -7,
+
+    UNINIT_VAR_ERR      = -8,
 };
+
+struct Namespace_struct
+{
+    int free_cell = 0;
+
+    Name_table name_table = {};
+};
+
+int Namespace_struct_ctor (Namespace_struct *namespace_struct);
+
+int Namespace_struct_dtor (Namespace_struct *namespace_struct);
+
 
 int Load_ast_tree (Tree *ast_tree, const char *name_input_file);
 

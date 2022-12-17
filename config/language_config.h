@@ -2,7 +2,6 @@
 #define _LANGUAGE_CONFIG_H_
 
 #include "language_dsl.h"
-#include "../src/Generals_func/generals.h"
 
 static const char* Default_frontend_output = "ast_tree.txt";
 
@@ -167,7 +166,7 @@ static const char *Name_standard_func[] =
 
 static const int Cnt_param_standart_func[] =
 {
-    0, 1, 1, Inf, Inf, 1, 0
+    0, 1, 1, 1, 1, 1, 0
 };
 
 //================================================================================================
