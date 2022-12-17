@@ -2,76 +2,174 @@
 #define _LANGUAGE_CONFIG_H_
 
 #include "language_dsl.h"
+#include "../src/Generals_func/generals.h"
 
-static const char *ast_format_file = "ast_tree.txt";
+static const char* Default_frontend_output = "ast_tree.txt";
+
+static const char* Default_backend_output = "asm_output.txt";
 
 //================================================================================================
 
-#define DEF_NODE_TYPE(name, num, ...)    \         
-    name = (num),
 
 enum Node_type
 {
-    #include "node_types.h"
+    UNKNOWN_T = 0,
+
+    DEFS      =  1,
+    NFUNC     =  2,
+    NVAR      =  3,
+
+    BLOCK     =  4, 
+
+    SEQ       =  5,
+
+
+    IF        =  6,
+    BRANCH    =  7,
+
+    WHILE     =  8,
+
+    FUNC      =  9,
+    ARG       = 10, 
+    CALL      = 11, 
+    PAR       = 12,     
+    RET       = 13,
+
+    VAR       = 14,
+    CONST     = 15,
+    OP        = 16,
+
+    ASS       = 17,
+
+    ELSE      = 18,
+
 };
-
-#undef DEF_NODE_TYPE
-
-
-#define DEF_NODE_TYPE(name, num, ...)    \         
-    #name,
 
 static const char* Name_type_node[] =           //Type node names in ast format
 {
-    #include "node_types.h"
+    "UNKNOWN_T", 
+
+    "DEFS", "NFUNC", "NVAR",      
+
+    "BLOCK", 
+
+    "SEQ",
+
+    "IF", "BRANCH",
+
+    "WHILE",
+
+    "FUNC", "ARG", 
+    "CALL", "PAR", "RET",
+
+    "VAR", "CONST", "OP",
+
+    "ASS",
+
+    "ELSE",
 };
-
-#undef DEF_NODE_TYPE
-
-
-#define DEF_NODE_TYPE(name, num, lang_name)      \         
-    lang_name,
 
 static const char* Name_lang_type_node[] =     //Type node names in my language
 {
-    #include "node_types.h"
+    "UNKNOWN_T", 
+
+    "DEFS", "learnComand", "breed",      
+
+    "BLOCK", 
+
+    "SEQ",
+
+    "if", "BRANCH",
+
+    "goodBoy",
+
+    "FUNC", "ARG", 
+    "CALL", "PAR", "bring",
+
+    "VAR", "CONST", "OP",
+
+    "nickname",
+
+    "else",
 };
 
-#undef DEF_NODE_TYPE
 
 //================================================================================================
 
-#define DEF_NODE_OP(name, num, ...)      \         
-    name = (num),
-
 enum Operations
 {
-    #include "operations.h"
+    UNKNOWN_OP  =  0,
+
+    ADD         =  1,
+    SUB         =  2,
+    MUL         =  3,
+    DIV         =  4,   
+
+    AND         =  5,
+    OR          =  6,
+    NOT         =  7,
+
+    DF          =  8,
+
+    GT          =  9,
+    NLT         = 10,
+    LT          = 11,
+    NGT         = 12,
+    EQ          = 13,
+    NEQ         = 14,
 };
-
-#undef DEF_NODE_OP
-
-
-#define DEF_NODE_OP(name, num, ...)      \         
-    #name,
 
 static const char* Name_operations[] =          //Operation names in ast format
 {
-    #include "operations.h"
+    "UNKNOWN_OP",
+
+    "ADD", "SUB", "MUL", "DIV",          
+
+    "AND", "OR", "NOT",         
+
+    "DF",          
+
+    "GT", "NLT", 
+    "LT", "NGT",     
+    "EQ", "NEQ"         
 };
 
-#undef DEF_NODE_OP
+static const char* Name_lang_operations[] =     //Operation names in language
+{         
+    "UNKNOWN_OP",
+
+    "lick", "bite", "scratch", "tear",          
+
+    "and", "or", "not",         
+
+    "\'",          
+
+    "more", "nmore", 
+    "less", "nless",     
+    "equal", "nequal"         
+};
 
 
-#define DEF_NODE_OP(name, num, lang_name)      \         
-    lang_name,
+//================================================================================================
 
-static const char* Name_lang_operations[] =     //Operation names in my language
+static const char *Name_standard_func[] =
 {
-    #include "operations.h"
+    "main",
+    "sqrt",
+    "abs",
+
+    "scan"
+    "print"
+
+    "set_pixel",
+    "flush"
 };
 
-#undef DEF_NODE_OP
+static const int Cnt_param_standart_func[] =
+{
+    0, 1, 1, Inf, Inf, 1, 0
+};
+
 //================================================================================================
 
 #endif  //_LANGUAGE_CONFIG_H_ 

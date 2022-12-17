@@ -67,7 +67,7 @@ Node* Create_value_node (const double value, Node* left, Node* right)
 
     AST_data* node_data = (AST_data*) node->data;
 
-    node_data->node_type = NUM;
+    node_data->node_type = CONST;
     node_data->data.val = value;
 
     node->data = node_data;

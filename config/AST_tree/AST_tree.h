@@ -11,7 +11,7 @@
 
 struct AST_data
 {
-    Node_type node_type;
+    int node_type;
     
     union Node_data
     {

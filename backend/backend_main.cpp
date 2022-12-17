@@ -17,27 +17,33 @@ int main (int argc, char *argv[])
 
     Tree ast_tree = {};
     if (Tree_ctor (&ast_tree))
+        PROCESS_ERROR (EXIT_FAILURE, "Tree ctor failed\n");
 
+    char *name_output_file = (char*) Default_backend_output;
     switch (argc)
     {
         case 1:
             return PROCESS_ERROR (EXIT_FAILURE, "No file to read.\n"
                                                 "Specify the file from which you want to read\n");
         case 2:
-        {
-            if (Read_source_file (&ast_tree, argv[1]))
+            if (Load_ast_tree (&ast_tree, argv[1]))
                 return PROCESS_ERROR (EXIT_FAILURE, "Read file in ast_tree fail\n");
             break;
-        }
+
+        case 3:
+            if (Load_ast_tree (&ast_tree, argv[1]))
+                return PROCESS_ERROR (EXIT_FAILURE, "Read file in ast_tree fail\n");
+            name_output_file = argv[2];
+            break;
 
         default:
             return PROCESS_ERROR (EXIT_FAILURE, "Too many command line arguments\n");
     }
 
-    Write_database (&source.ast_tree);
+    Create_asm_file (&ast_tree, name_output_file);
 
-    if (Frontend_struct_dtor (&source))
-        return PROCESS_ERROR (FRONTEND_DTOR_ERR, "Ctor tree error\n");
+    if (Tree_dtor (&ast_tree))
+        PROCESS_ERROR (EXIT_FAILURE, "Tree dtor failed\n");
 
     
     #ifdef USE_LOG

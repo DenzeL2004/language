@@ -4,11 +4,17 @@
 #define CREATE_VAL(val) Create_value_node ((val), nullptr, nullptr)
 
 #define CHANGE_DATA(node, union_param, value)                                       \
-    ((AST_data*) (node)->data)->data.union_param  = (value);
+    ((AST_data*) (node)->data)->data.union_param  = (value)
+
+#define GET_DATA(node, union_param)                                                 \
+        ((AST_data*) (node)->data)->data.union_param
 
 
 #define DEF_TYPE(node, type)                                                        \
     ((AST_data*) (node)->data)->node_type = (type)
+
+#define GET_TYPE(node)                                                              \
+    ((AST_data*) (node)->data)->node_type 
 
 
 #define IS_VAL(node) (((AST_data*) (node)->data)->node_type == NUM)

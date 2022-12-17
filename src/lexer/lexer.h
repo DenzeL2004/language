@@ -1,12 +1,11 @@
 #ifndef _LEXER_H_
 #define _LEXER_H_
 
-#include "../../src/array/array.h"
+#include "../array/array.h"
 
 enum Lexer_func_err
 {
     ANALYS_STR_ERR  = -1,
-
     CUT_STR_ERR     = -3,
 };
 

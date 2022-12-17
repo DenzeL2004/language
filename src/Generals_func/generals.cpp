@@ -92,7 +92,7 @@ int Bin_represent(FILE *fpout, size_t elem, uint64_t size_elem)
 
 //======================================================================================
 
-uint64_t Get_hash (const char *data, uint64_t len) 
+uint64_t Get_data_hash (const char *data, uint64_t len) 
 {
 	assert (data != nullptr && "data is nullptr");
 
@@ -110,6 +110,30 @@ uint64_t Get_hash (const char *data, uint64_t len)
     hash += (hash << 15);
 	
 	return hash;
+}
+
+//======================================================================================
+
+int64_t Get_str_hash (const char *str) 
+{
+    assert (str != nullptr && "str is nullptr");
+    
+    const int prime_num = 239017, mod = 1e9+7;
+
+    int64_t hash = 0, degree = 1;
+    int ip = 0;
+
+    while (*(str + ip) != '\0') 
+    {
+        unsigned char ch = (unsigned char) tolower(*(str + ip));
+        
+        hash = (hash + degree * ch) % mod;
+        degree = (degree * prime_num) % mod;
+
+        ip++;
+    }
+
+    return hash; 
 }
 
 //======================================================================================

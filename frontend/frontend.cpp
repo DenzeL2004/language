@@ -12,7 +12,7 @@
 #include "../src/process_text/process_text.h"
 
 
-#include "lexer/lexer.h"
+#include "../src/lexer/lexer.h"
 #include "reader/reader.h"
 
 static int Check_file_extension (const char *name_file);
@@ -88,7 +88,6 @@ int Read_source_file (Frontend_struct *frontend_struct, const char *name_input_f
 
     Free_buffer (&text);
 
-    Array_recalloc (&frontend_struct->tokens, frontend_struct->cnt_tokens + 1);
     Array_set_ptr_by_ind (&frontend_struct->tokens, frontend_struct->cnt_tokens, strdup (""));
 
 
@@ -118,11 +117,11 @@ static int Check_file_extension (const char *name_file)
 
 //======================================================================================================
 
-int Write_database (const Tree *tree)
+int Write_database (const Tree *tree, const char* name_output_file)
 {
     assert (tree != nullptr && "tree is nullptr");
 
-    FILE *fpout = Open_file_ptr (ast_format_file, "w");
+    FILE *fpout = Open_file_ptr (name_output_file, "w");
     if (Check_nullptr (fpout))
         return PROCESS_ERROR (ERR_FILE_OPEN, "Opening the output file\n");
 
@@ -147,7 +146,7 @@ static int Write_node_ast_format (FILE *fpout, const Node *node, const int shift
 
     fprintf (fpout, "%*c{ %s, ", shift, ' ', Name_type_node [ast_data->node_type]);
     
-    if (ast_data->node_type == NUM)
+    if (ast_data->node_type == CONST)
         fprintf (fpout, "%.3lf, ", ast_data->data.val);
     
     else if (ast_data->node_type == OP)

@@ -6,8 +6,8 @@
 
 #include "lexer.h"
 
-#include "../../src/log_info/log_errors.h"
-#include "../../src/Generals_func/generals.h"
+#include "../log_info/log_errors.h"
+#include "../Generals_func/generals.h"
 
 
 
@@ -35,9 +35,6 @@ int Lexical_analysis_str (const char *buffer, Array_struct *tokens)
             Skip_space_symbols (&buffer);
         
         if (*buffer == '\0') break;
-
-        if (id == tokens->capacity)
-            Array_recalloc (tokens, id * 2);
         
         if (isalpha (*buffer))
             Array_set_ptr_by_ind (tokens, id, Cut_word (&buffer));

@@ -119,7 +119,9 @@ int Bin_represent (FILE *fpout, size_t elem, uint64_t size_elem);
 
 int Clear_data (unsigned char *cmd_hash_tabel, size_t size_data);
 
-uint64_t Get_hash (const char *data, uint64_t len);
+uint64_t Get_data_hash (const char *data, uint64_t len);
+
+int64_t Get_str_hash (const char *str);
 
 /** 
  * @brief Paints a line

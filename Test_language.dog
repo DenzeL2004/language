@@ -1,10 +1,10 @@
-learnComand Dump2 ()
+learnComand Dump2 (a)
 {
     bring 10;
 }
 
 learnComand main ()
 {
-    Dump2 (a, b, c);
+    Dump2 (10 lick 10, 20, 30);
     bring 10;
 }

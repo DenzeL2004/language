@@ -30,7 +30,7 @@ int Frontend_struct_dtor (Frontend_struct *frontend_struct);
 
 int Read_source_file (Frontend_struct *frontend_struct, const char *name_input_file);
 
-int Write_database (const Tree *tree);
+int Write_database (const Tree *ast_tree, const char* name_output_file = Default_frontend_output);
 
 #define LOOK_FRONTEND_AST_TREE_ 
 

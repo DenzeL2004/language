@@ -181,12 +181,12 @@ static void Draw_node_data (FILE *fpout, const AST_data* data)
 
     switch (data->node_type)
     {
-        case NUM:
+        case CONST:
             fprintf (fpout, "%.3lf}", data->data.val);
             break;
 
         case VAR: case NVAR: case FUNC: case NFUNC: case CALL: 
-        case PARAM: case ASS: 
+        case PAR: case ASS: 
             fprintf (fpout, "%s}", data->data.obj);
             break;
 
@@ -214,7 +214,7 @@ static const char *Color_selection (const AST_data *data)
 
     switch (data->node_type)
     {
-        case NUM:
+        case CONST:
             return "lightgreen";
 
         case VAR: case NVAR:     
@@ -229,7 +229,7 @@ static const char *Color_selection (const AST_data *data)
         case ASS:          
             return "orange";
 
-        case ARG: case PARAM:
+        case ARG: case PAR:
             return "olivedrab1";
 
         case OP:            
