@@ -68,6 +68,8 @@ static int Compile_if       (FILE *fpout, const Node *node, Namespace_struct *cu
 
 static int Compile_branch   (FILE *fpout, const Node *node, Namespace_struct *cur_namespace);
 
+static int Compile_while    (FILE *fpout, const Node *node, Namespace_struct *cur_namespace);
+
 
 //======================================================================================================
 
@@ -99,6 +101,37 @@ int Namespace_struct_dtor (Namespace_struct *namespace_struct)
 
 //======================================================================================================
 
+Namespace_struct* Dup_namespace (const Namespace_struct *namespace_struct)
+{
+    assert (namespace_struct != nullptr && "frontend struct is nullptr");
+
+    Namespace_struct *dup_namespace = (Namespace_struct*) calloc (1, sizeof (Namespace_struct));
+
+    if (Name_table_ctor (&dup_namespace->name_table))
+    {
+        PROCESS_ERROR (NAME_TABLE_CTOR_ERR, "Ctor Name_table \'dup_namespace->name_table\' error\n");
+        return nullptr;
+    }
+
+    for (int id = 0; id < namespace_struct->name_table.cnt_object; id++)
+    {
+        const char *name   = namespace_struct->name_table.objects[id].name;
+        const int type_obj = namespace_struct->name_table.objects[id].type;
+        int add_id = Add_object (&dup_namespace->name_table, name, type_obj);
+
+        dup_namespace->name_table.objects[add_id].data = calloc (1, sizeof (int)); 
+    
+        int val = *((int*) namespace_struct->name_table.objects[add_id].data);
+        *((int*) dup_namespace->name_table.objects[add_id].data) = val;
+    }
+
+    dup_namespace->free_cell = namespace_struct->free_cell;
+
+    return dup_namespace;
+}
+
+//======================================================================================================
+
 int Create_asm_file (const Tree *ast_tree, const char* name_output_file)
 {
     assert (ast_tree !=  nullptr && "ast_tree is nullptr");
@@ -111,7 +144,7 @@ int Create_asm_file (const Tree *ast_tree, const char* name_output_file)
         return PROCESS_ERROR (ERR_FILE_OPEN, "open output file \'%s\' error", name_output_file);
 
     Write_begin_program (fpout);
-
+    
     Namespace_struct cur_namespace = {};
     if (Namespace_struct_ctor (&cur_namespace))
         return PROCESS_ERROR (NAMESPACE_CTOR_ERR, "Ctor Name_table \'cur_namespace\' error\n");
@@ -216,9 +249,23 @@ static int Write_begin_program (FILE *fpout)
 
     fprintf (fpout, "call main\n");
 
-    fprintf (fpout, "out\n"); //TODO DEL
-
     fprintf (fpout, "hlt\n\n");
+
+    int fdin = Open_file_discriptor ("../language/config/standart_func.txt", O_RDONLY);
+    if (fdin < 0)
+        return PROCESS_ERROR (ERR_FILE_OPEN, "Error opening file\n");
+
+    Text_info text = {};
+    
+    if (Text_read (fdin, &text))
+        return PROCESS_ERROR (ERR_FILE_READING, "Error reading into Text_info structure\n");
+
+    if (Close_file_discriptor (fdin))
+        return PROCESS_ERROR (ERR_FILE_CLOSE,"Error close input file \n");
+    
+    fprintf (fpout, "%s\n", text.text_buf);
+
+    Free_buffer (&text);
 
     return 0;
 }
@@ -280,12 +327,19 @@ static int Compile (FILE *fpout, const Node *node, Namespace_struct *cur_namespa
         case BRANCH: Compile_branch (fpout, node, cur_namespace);
             break;
 
+        case WHILE: Compile_while   (fpout, node, cur_namespace);
+            break;
+
         default:    
             break;
     } 
 
     return 0;
 }
+
+#define GET_MEM_CELL(id)                                    \
+    *((int*) cur_namespace->name_table.objects[id].data)
+    
 
 //======================================================================================================
 
@@ -320,7 +374,7 @@ static int Compile_nvar (FILE *fpout, const Node *node, Namespace_struct *cur_na
     id = Add_object (&cur_namespace->name_table, GET_DATA (node, obj), OBJ_VAR);
     cur_namespace->name_table.objects[id].data = calloc (1, sizeof (int));
     
-    *((int*) cur_namespace->name_table.objects[id].data) = cur_namespace->free_cell; 
+    GET_MEM_CELL(id) = cur_namespace->free_cell; 
     cur_namespace->free_cell++; 
 
     fprintf (fpout, "   //Definition_variable_\'%s\'\n\n", GET_DATA (node, obj));
@@ -369,7 +423,7 @@ static int Compile_par (FILE *fpout, const Node *node, Namespace_struct *cur_nam
     id = Add_object (&cur_namespace->name_table, GET_DATA (node, obj), OBJ_PARAM);
     cur_namespace->name_table.objects[id].data = calloc (1, sizeof (int));
     
-    *((int*) cur_namespace->name_table.objects[id].data) = cur_namespace->free_cell; 
+    GET_MEM_CELL(id) = cur_namespace->free_cell; 
     cur_namespace->free_cell++; 
 
     fprintf (fpout, "   //Definition_param_\'%s\'\n\n", GET_DATA (node, obj));
@@ -463,10 +517,15 @@ static int Compile_if (FILE *fpout, const Node *node, Namespace_struct *cur_name
     
     fprintf (fpout, "je if%d_false\n", cur_if);
 
-    ///COPY_NAMESPACE
-    Compile (fpout,  node->right,  cur_namespace);
+    Namespace_struct *dup_namespace = Dup_namespace (cur_namespace);
+    if (Check_nullptr (dup_namespace)) 
+        return PROCESS_ERROR (ERR_MEMORY_ALLOC, "Failed duplicate \'cur_namespace\'\n");
+    Compile (fpout,  node->right,  dup_namespace);
 
     fprintf (fpout, "\n//СONDITION%d_END\n", cur_if);
+
+    if (Namespace_struct_dtor (dup_namespace))
+        return PROCESS_ERROR (NAMESPACE_DTOR_ERR, "Dtor \'dup_namespace\' error\n");
 
     return 0;
 }
@@ -478,10 +537,11 @@ static int Compile_branch (FILE *fpout, const Node *node, Namespace_struct *cur_
     assert (fpout != nullptr && "fpout is nullptr");
     assert (cur_namespace != nullptr && "name_table is nullptr");
 
-    Compile (fpout,  node->left,  cur_namespace);
-
     static int cnt_if = 0; cnt_if++;
     int cur_if = cnt_if;
+
+    Compile (fpout,  node->left,  cur_namespace);
+
     fprintf (fpout, "jump if%d_true_exit\n", cur_if);
     
     fprintf (fpout, "if%d_false:\n", cur_if);
@@ -489,6 +549,37 @@ static int Compile_branch (FILE *fpout, const Node *node, Namespace_struct *cur_
     Compile (fpout,  node->right,  cur_namespace);
 
     fprintf (fpout, "if%d_true_exit:\n", cur_if);
+
+    return 0;
+}
+
+//======================================================================================================
+
+static int Compile_while (FILE *fpout, const Node *node, Namespace_struct *cur_namespace)
+{
+    assert (fpout != nullptr && "fpout is nullptr");
+    assert (cur_namespace != nullptr && "name_table is nullptr");
+
+    static int cnt_while = 0; cnt_while++;
+    int cur_while = cnt_while;
+    fprintf (fpout, "\n//WHILE%d_START\n", cur_while);
+
+    Compile (fpout, node->left, cur_namespace);
+    fprintf (fpout, "push 0\n");
+    fprintf (fpout, "je skip_while%d\n\n", cur_while);
+
+    fprintf (fpout, "while%d:\n", cur_while);
+
+    Compile (fpout, node->right, cur_namespace);
+
+
+    Compile (fpout, node->left, cur_namespace);
+    fprintf (fpout, "push 1\n");
+    fprintf (fpout, "je while%d   //out_condition\n\n", cur_while);
+
+
+    fprintf (fpout, "skip_while%d:\n", cur_while);
+    fprintf (fpout, "//WHILE%d_END\n\n", cur_while);
 
     return 0;
 }
@@ -523,7 +614,7 @@ static int Compile_assig (FILE *fpout, const Node *node, Namespace_struct *cur_n
     if (id == Not_init_object)
         return PROCESS_ERROR (UNINIT_VAR_ERR, "an uninitialized variable \'%s\' is used", GET_DATA (node, obj));
 
-    int cell_memory = *((int*) cur_namespace->name_table.objects[id].data);
+    int cell_memory = GET_MEM_CELL(id);;
 
     fprintf (fpout, "pop [%d+rax]", cell_memory);
     fprintf (fpout, "   //assigning_a_value_to_a_variable_\'%s\'\n\n", GET_DATA (node, obj));
@@ -539,6 +630,9 @@ static int Compile_seq (FILE *fpout, const Node *node, Namespace_struct *cur_nam
     assert (cur_namespace != nullptr && "name_table is nullptr");
 
     Compile (fpout, node->left,  cur_namespace);
+    
+    if (GET_TYPE (node->left) == CALL) fprintf (fpout, "pop rbx\n");
+
     Compile (fpout, node->right, cur_namespace);
 
     return 0;
@@ -579,7 +673,7 @@ static int Compile_var (FILE *fpout, const Node *node, Namespace_struct *cur_nam
     if (id == Not_init_object)
         return PROCESS_ERROR (UNINIT_VAR_ERR, "an uninitialized variable \'%s\' is used", GET_DATA (node, obj));
 
-    int cell_memory = *((int*) cur_namespace->name_table.objects[id].data);
+    int cell_memory = GET_MEM_CELL(id);;
 
     fprintf (fpout, "push [%d+rax]  //Put_on_stack_value_var_'%s'\n", cell_memory, GET_DATA (node, obj));
     

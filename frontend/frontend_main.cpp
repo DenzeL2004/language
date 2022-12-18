@@ -28,21 +28,21 @@ int main (int argc, char *argv[])
                                                 "Specify the file from which you want to read\n");
         case 2:
             if (Read_source_file (&source, argv[1]))
-                return PROCESS_ERROR (EXIT_FAILURE, "Read file in ast_tree fail\n");
+                return PROCESS_ERROR (EXIT_FAILURE, "Read file from source fail\n");
             break;
         
         case 3:
             if (Read_source_file (&source, argv[1]))
-                return PROCESS_ERROR (EXIT_FAILURE, "Read file in ast_tree fail\n");
+                return PROCESS_ERROR (EXIT_FAILURE, "Read file from source fail\n");
             name_output_file = argv[2];
             break;
 
         default:
             return PROCESS_ERROR (EXIT_FAILURE, "Too many command line arguments\n");
     }
-
-    Write_database (&source.ast_tree);
-
+    
+    Write_database (&source.ast_tree, name_output_file);
+    
     if (Frontend_struct_dtor (&source))
         return PROCESS_ERROR (FRONTEND_DTOR_ERR, "Ctor tree error\n");
 

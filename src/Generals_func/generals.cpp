@@ -187,7 +187,7 @@ int Open_file_discriptor (const char *name_file, const int mode){
 	assert (name_file != nullptr && "name open file is nullptr");
 
 	int fd = open (name_file, mode);
-    if (fd == -1){
+    if (fd < 0){
 		errno = ENOENT;
         fprintf (stderr, "Could't get handel of file %s with mode: %d\n", name_file, mode);
 		perror ("\n");

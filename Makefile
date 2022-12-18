@@ -1,4 +1,4 @@
-all: mkdirectory build_front build_back
+all: mkdirectory build_front build_back run
 
 FLAGS = -Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-equal -Winline -Wunreachable-code -Wmissing-declarations 		\
 		-Wmissing-include-dirs -Wswitch-enum -Wswitch-default -Weffc++ -Wmain -Wextra -Wall -g -pipe -fexceptions -Wcast-qual -Wconversion	\
@@ -9,6 +9,8 @@ FLAGS = -Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-equa
 FRONT_DIR = frontend
 
 
+run: obj/main.o obj/generals.o obj/log_errors.o
+	g++ obj/main.o obj/generals.o obj/log_errors.o -o run
 
 build_front: obj/frontend_main.o obj/tree.o obj/generals.o obj/log_errors.o obj/process_text.o obj/array.o 	\
 			 obj/frontend.o obj/AST_draw_tree.o obj/AST_tree.o 	obj/lexer.o	obj/reader.o						
@@ -25,6 +27,9 @@ build_back: obj/backend_main.o obj/tree.o obj/generals.o obj/log_errors.o obj/pr
 			g++ obj/backend_main.o obj/tree.o obj/generals.o obj/log_errors.o obj/process_text.o 				\
 				obj/backend.o obj/AST_tree.o obj/AST_draw_tree.o obj/lexer.o obj/array.o obj/name_table.o -o backend
 
+
+obj/main.o: main.cpp
+	g++ main.cpp -c -o obj/main.o $(FLAGS)
 
 
 obj/frontend_main.o: frontend/frontend_main.cpp

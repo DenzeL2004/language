@@ -35,6 +35,8 @@ static const long double Eps = 1e-10; ///< Global constant equal to \f$\ 10^{-9}
 
 static const int Inf = 1e9+7; 
 
+static const int Init_buffer = 100; 
+
 /**
  * @enum Errors
  * @brief Represents the status of errors

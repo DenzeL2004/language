@@ -830,8 +830,7 @@ static Node* Unique_operation (int *pos, const Array_struct *tokens)
 
     if (!strcmp (cur_token, Name_lang_operations [SUB]))
     {
-        node = Create_operation_node (MUL, nullptr, nullptr);
-        node->left = Create_value_node (-1, nullptr, nullptr);
+        node = Create_operation_node (NEG, nullptr, nullptr);
 
         (*pos)++;
         node->right = Get_priority (pos, tokens);

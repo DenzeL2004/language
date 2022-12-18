@@ -116,6 +116,8 @@ enum Operations
     NGT         = 12,
     EQ          = 13,
     NEQ         = 14,
+
+    NEG         = 15,
 };
 
 static const char* Name_operations[] =          //Operation names in ast format
@@ -130,7 +132,9 @@ static const char* Name_operations[] =          //Operation names in ast format
 
     "GT", "NLT", 
     "LT", "NGT",     
-    "EQ", "NEQ"         
+    "EQ", "NEQ",
+
+    "NEG"         
 };
 
 static const char* Name_lang_operations[] =     //Operation names in language
@@ -145,7 +149,9 @@ static const char* Name_lang_operations[] =     //Operation names in language
 
     "more", "nless", 
     "less", "nmore",     
-    "equal", "nequal"         
+    "equal", "nequal",
+
+    "bite"        
 };
 
 
