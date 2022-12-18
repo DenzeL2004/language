@@ -60,6 +60,14 @@ static int Compile_seq      (FILE *fpout, const Node *node, Namespace_struct *cu
 
 static int Compile_block    (FILE *fpout, const Node *node, Namespace_struct *cur_namespace);
 
+static int Compile_par      (FILE *fpout, const Node *node, Namespace_struct *cur_namespace);
+
+static int Compile_arg      (FILE *fpout, const Node *node, Namespace_struct *cur_namespace);
+
+static int Compile_if       (FILE *fpout, const Node *node, Namespace_struct *cur_namespace);
+
+static int Compile_branch   (FILE *fpout, const Node *node, Namespace_struct *cur_namespace);
+
 
 //======================================================================================================
 
@@ -80,7 +88,7 @@ int Namespace_struct_ctor (Namespace_struct *namespace_struct)
 int Namespace_struct_dtor (Namespace_struct *namespace_struct) 
 {
     assert (namespace_struct != nullptr && "frontend struct is nullptr");
-    
+
     namespace_struct->free_cell = 0;
 
     if (Name_table_dtor (&namespace_struct->name_table))
@@ -169,7 +177,11 @@ static int Check_function_call (const Node *node, Name_table *function_names)
 
     if (GET_TYPE (node) == NFUNC)
     {
-        int id = Add_object (function_names, GET_DATA (node, obj), OBJ_FUNC);
+        int id = Find_id_object (function_names, GET_DATA (node, obj));
+        if (id != Not_init_object)
+            PROCESS_ERROR(REDEFINITION_ERR, "redefinition function \'%s\'\n", GET_DATA (node, obj));
+
+        id = Add_object (function_names, GET_DATA (node, obj), OBJ_FUNC);
         function_names->objects[id].data = calloc (1, sizeof (int)); 
 
         *((int*) function_names->objects[id].data) = cnt;
@@ -199,7 +211,13 @@ static int Write_begin_program (FILE *fpout)
 {
     assert (fpout != nullptr && "fpout is nullptr");
 
+    fprintf (fpout, "push 0\n");
+    fprintf (fpout, "pop rax\n");
+
     fprintf (fpout, "call main\n");
+
+    fprintf (fpout, "out\n"); //TODO DEL
+
     fprintf (fpout, "hlt\n\n");
 
     return 0;
@@ -226,6 +244,12 @@ static int Compile (FILE *fpout, const Node *node, Namespace_struct *cur_namespa
         case NFUNC: Compile_nfunc   (fpout, node, cur_namespace);
             break;
         
+        case PAR:   Compile_par   (fpout, node, cur_namespace);
+            break;
+
+        case ARG:   Compile_arg   (fpout, node, cur_namespace);
+            break;
+        
         case CALL:  Compile_call    (fpout, node, cur_namespace);
             break;
 
@@ -235,25 +259,30 @@ static int Compile (FILE *fpout, const Node *node, Namespace_struct *cur_namespa
         case OP:    Compile_oper    (fpout, node, cur_namespace);
             break;
         
-        case ASS:   Compile_assig    (fpout, node, cur_namespace);
+        case ASS:   Compile_assig   (fpout, node, cur_namespace);
             break;
 
         case CONST: Compile_const   (fpout, node, cur_namespace);
             break;
 
-        case VAR:   Compile_var      (fpout, node, cur_namespace);
+        case VAR:   Compile_var     (fpout, node, cur_namespace);
             break;
 
-        case SEQ:   Compile_seq      (fpout, node, cur_namespace);
+        case SEQ:   Compile_seq     (fpout, node, cur_namespace);
             break;
 
-        case BLOCK: Compile_block    (fpout, node, cur_namespace);
+        case BLOCK: Compile_block   (fpout, node, cur_namespace);
+            break;
+
+        case IF:    Compile_if      (fpout, node, cur_namespace);
+            break;
+
+        case BRANCH: Compile_branch (fpout, node, cur_namespace);
             break;
 
         default:    
             break;
     } 
-    
 
     return 0;
 }
@@ -281,14 +310,20 @@ static int Compile_nvar (FILE *fpout, const Node *node, Namespace_struct *cur_na
     if (!Check_nullptr (node->right))
     {
         Compile (fpout, node->right, cur_namespace);
-        fprintf (fpout, "pop [%d]\n", cur_namespace->free_cell);
+        fprintf (fpout, "pop [%d+rax]", cur_namespace->free_cell);
     }  
+    
+    int id = Find_id_object (&cur_namespace->name_table, GET_DATA (node, obj));
+    if (id != Not_init_object)
+        return PROCESS_ERROR(REDEFINITION_ERR, "redefinition variable \'%s\'\n", GET_DATA (node, obj));
 
-    int id = Add_object (&cur_namespace->name_table, GET_DATA (node, obj), OBJ_VAR);
+    id = Add_object (&cur_namespace->name_table, GET_DATA (node, obj), OBJ_VAR);
     cur_namespace->name_table.objects[id].data = calloc (1, sizeof (int));
     
     *((int*) cur_namespace->name_table.objects[id].data) = cur_namespace->free_cell; 
     cur_namespace->free_cell++; 
+
+    fprintf (fpout, "   //Definition_variable_\'%s\'\n\n", GET_DATA (node, obj));
 
     return 0;
 }
@@ -301,7 +336,8 @@ static int Compile_nfunc (FILE *fpout, const Node *node, Namespace_struct *cur_n
     assert (cur_namespace != nullptr && "name_table is nullptr");
 
     fprintf (fpout, "\n%s:\n", GET_DATA (node, obj));
-    fprintf (fpout, "pop rlx\n");
+    fprintf (fpout, "pop rlx    //save_pointer_to_where_to_return_after_the_function_terminates\n");
+    fprintf (fpout, "pop rax    \n");
 
     Namespace_struct new_namespace = {};
     if (Namespace_struct_ctor (&new_namespace))
@@ -318,14 +354,41 @@ static int Compile_nfunc (FILE *fpout, const Node *node, Namespace_struct *cur_n
 
 //======================================================================================================
 
+
+static int Compile_par (FILE *fpout, const Node *node, Namespace_struct *cur_namespace)
+{
+    assert (fpout != nullptr && "fpout is nullptr");
+    assert (cur_namespace != nullptr && "name_table is nullptr");
+
+    fprintf (fpout, "\npop [%d+rax]", cur_namespace->free_cell);
+
+    int id = Find_id_object (&cur_namespace->name_table, GET_DATA (node, obj));
+    if (id != Not_init_object)
+        return PROCESS_ERROR(REDEFINITION_ERR, "redefinition par \'%s\'\n", GET_DATA (node, obj));
+
+    id = Add_object (&cur_namespace->name_table, GET_DATA (node, obj), OBJ_PARAM);
+    cur_namespace->name_table.objects[id].data = calloc (1, sizeof (int));
+    
+    *((int*) cur_namespace->name_table.objects[id].data) = cur_namespace->free_cell; 
+    cur_namespace->free_cell++; 
+
+    fprintf (fpout, "   //Definition_param_\'%s\'\n\n", GET_DATA (node, obj));
+
+    return 0;
+}
+
+//======================================================================================================
+
 static int Compile_ret (FILE *fpout, const Node *node, Namespace_struct *cur_namespace)
 {
     assert (fpout != nullptr && "fpout is nullptr");
     assert (cur_namespace != nullptr && "name_table is nullptr");
 
+    fprintf (fpout, "//returned_value\n");
     Compile (fpout, node->right, cur_namespace);
+    fprintf (fpout, "//returned_value\n\n");
 
-    fprintf (fpout, "push rlx\n");
+    fprintf (fpout, "push rlx   //Get_pointer_to_where_to_return_after_the_function_terminates\n");
     fprintf (fpout, "ret\n\n");
 
     return 0;
@@ -333,20 +396,99 @@ static int Compile_ret (FILE *fpout, const Node *node, Namespace_struct *cur_nam
 
 //======================================================================================================
 
-
 static int Compile_call (FILE *fpout, const Node *node, Namespace_struct *cur_namespace)
 {
     assert (fpout != nullptr && "fpout is nullptr");
     assert (cur_namespace != nullptr && "name_table is nullptr");
 
-    fprintf (fpout, "\npush rlx\n");
-    fprintf (fpout, "pop rnx\n");
-    fprintf (fpout, "call %s\n", GET_DATA (node, obj));
+    fprintf (fpout, "\n//Begin_call_function\n");
+
+    fprintf (fpout, "push rlx   //Put_on_stack_pointer_to_where_to_return_after_the_function_terminates\n");
+    fprintf (fpout, "push rax   //Put_on_stack_pointer_where_the_variables_of_the_current_function_were_located\n");
+
+    fprintf (fpout, "\n//arguments_function_\'%s\':\n", GET_DATA (node, obj));
 
     Compile (fpout, node->right, cur_namespace);
 
-    fprintf (fpout, "push rnx\n");
-    fprintf (fpout, "pop rlx\n");
+    fprintf (fpout, "//arguments_function_\'%s\'\n\n", GET_DATA (node, obj));
+    
+    fprintf (fpout, "push %d\n", cur_namespace->free_cell);
+
+    fprintf (fpout, "call %s\n", GET_DATA (node, obj));
+    
+    fprintf (fpout, "pop rbx    //Put_on_stack_returned_function_val\n");
+    fprintf (fpout, "pop rax    //Save_pointer_where_the_variables_of_the_current_function_were_located\n");
+    
+    fprintf (fpout, "pop rlx    //Save_pointer_to_where_to_return_after_the_function_terminates\n");
+    
+    fprintf (fpout, "push rbx   //Put_on_stack_returned_function_val\n");
+
+    fprintf (fpout, "//End_call_function\n\n");
+
+    return 0;
+}
+
+//======================================================================================================
+
+static int Compile_arg (FILE *fpout, const Node *node, Namespace_struct *cur_namespace)
+{
+    assert (fpout != nullptr && "fpout is nullptr");
+    assert (cur_namespace != nullptr && "name_table is nullptr");
+
+    fprintf (fpout, "\n//argument:\n");
+
+    Compile (fpout, node->left, cur_namespace);
+    Compile (fpout, node->right, cur_namespace);
+
+    fprintf (fpout, "\n");
+
+    return 0;
+}
+
+//======================================================================================================
+
+static int Compile_if (FILE *fpout, const Node *node, Namespace_struct *cur_namespace)
+{
+    assert (fpout != nullptr && "fpout is nullptr");
+    assert (cur_namespace != nullptr && "name_table is nullptr");
+
+    static int cnt_if = 0; cnt_if++;
+    int cur_if = cnt_if;
+
+    fprintf (fpout, "\n//СONDITION%d_START\n", cur_if);
+
+    Compile (fpout,  node->left,  cur_namespace);
+    fprintf (fpout, "push 0\n");
+
+    
+    fprintf (fpout, "je if%d_false\n", cur_if);
+
+    ///COPY_NAMESPACE
+    Compile (fpout,  node->right,  cur_namespace);
+
+    fprintf (fpout, "\n//СONDITION%d_END\n", cur_if);
+
+    return 0;
+}
+
+//======================================================================================================
+
+static int Compile_branch (FILE *fpout, const Node *node, Namespace_struct *cur_namespace)
+{
+    assert (fpout != nullptr && "fpout is nullptr");
+    assert (cur_namespace != nullptr && "name_table is nullptr");
+
+    Compile (fpout,  node->left,  cur_namespace);
+
+    static int cnt_if = 0; cnt_if++;
+    int cur_if = cnt_if;
+    fprintf (fpout, "jump if%d_true_exit\n", cur_if);
+    
+    fprintf (fpout, "if%d_false:\n", cur_if);
+
+    Compile (fpout,  node->right,  cur_namespace);
+
+    fprintf (fpout, "if%d_true_exit:\n", cur_if);
 
     return 0;
 }
@@ -383,7 +525,8 @@ static int Compile_assig (FILE *fpout, const Node *node, Namespace_struct *cur_n
 
     int cell_memory = *((int*) cur_namespace->name_table.objects[id].data);
 
-    fprintf (fpout, "push [%d]\n", cell_memory);
+    fprintf (fpout, "pop [%d+rax]", cell_memory);
+    fprintf (fpout, "   //assigning_a_value_to_a_variable_\'%s\'\n\n", GET_DATA (node, obj));
 
     return 0;
 }
@@ -395,7 +538,7 @@ static int Compile_seq (FILE *fpout, const Node *node, Namespace_struct *cur_nam
     assert (fpout != nullptr && "fpout is nullptr");
     assert (cur_namespace != nullptr && "name_table is nullptr");
 
-    Compile (fpout, node->left, cur_namespace);
+    Compile (fpout, node->left,  cur_namespace);
     Compile (fpout, node->right, cur_namespace);
 
     return 0;
@@ -438,8 +581,8 @@ static int Compile_var (FILE *fpout, const Node *node, Namespace_struct *cur_nam
 
     int cell_memory = *((int*) cur_namespace->name_table.objects[id].data);
 
-    fprintf (fpout, "push [%d]\n", cell_memory);
-
+    fprintf (fpout, "push [%d+rax]  //Put_on_stack_value_var_'%s'\n", cell_memory, GET_DATA (node, obj));
+    
     return 0;
 }
 

@@ -32,6 +32,6 @@ int Read_source_file (Frontend_struct *frontend_struct, const char *name_input_f
 
 int Write_database (const Tree *ast_tree, const char* name_output_file = Default_frontend_output);
 
-#define LOOK_FRONTEND_AST_TREE_ 
+//#define LOOK_FRONTEND_AST_TREE_ 
 
 #endif //_FRONTEND_H_

@@ -143,8 +143,8 @@ static const char* Name_lang_operations[] =     //Operation names in language
 
     "\'",          
 
-    "more", "nmore", 
-    "less", "nless",     
+    "more", "nless", 
+    "less", "nmore",     
     "equal", "nequal"         
 };
 
@@ -153,11 +153,10 @@ static const char* Name_lang_operations[] =     //Operation names in language
 
 static const char *Name_standard_func[] =
 {
-    "main",
     "sqrt",
     "abs",
 
-    "scan"
+    "read"
     "print"
 
     "set_pixel",
@@ -166,7 +165,7 @@ static const char *Name_standard_func[] =
 
 static const int Cnt_param_standart_func[] =
 {
-    0, 1, 1, 1, 1, 1, 0
+    1, 1, 0, 1, 1, 0
 };
 
 //================================================================================================

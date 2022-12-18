@@ -1,7 +1,28 @@
+learnComand dumb(a)
+{
+    breed ci nickname a;
+    bring ci lick 1;
+}
+
 learnComand main ()
 {
-    breed a nickname 10;
-    breed b nickname 20;
+    breed a nickname 1;
+    breed b nickname 2;
 
-    a nickname a scratch b;
+    if (a more b)
+    {
+        if (a equal 2)
+            b nickname 1;
+        else
+            a nickname 3;
+    }
+    else
+    {
+        b nickname 10;
+    }
+
+    a nickname not (a scratch dumb(a) or 1);
+    a nickname a scratch dumb(a) lick a lick 1;
+
+    bring a;
 }

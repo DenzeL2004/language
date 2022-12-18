@@ -947,6 +947,9 @@ static Node* Get_arg (int *pos, const Array_struct *tokens)
     assert (tokens != nullptr && "tokens is nullptr");
     assert (pos != nullptr && "pos is nullptr");
 
+    if (!strcmp (GET_TOKEN (*pos), ")"))
+        return nullptr;
+
     Node *node = Create_empty_node ();
     DEF_TYPE (node, ARG);
 

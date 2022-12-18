@@ -19,13 +19,12 @@ bool Check_num (const char *str)
 	assert (str != nullptr && "str is nullptr");
 
 	if (str[0] == '-') str++;
-	
 	while (*str != '\0')
 	{
-		if (!isdigit (*str))
+		if (isdigit (*str) || *str == '.')
+			str++;
+		else
 			return 0;
-
-		str++;
 	}
 
 	return 1;

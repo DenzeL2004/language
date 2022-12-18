@@ -24,6 +24,8 @@ enum Backend_func_err
     NAMESPACE_DTOR_ERR  = -7,
 
     UNINIT_VAR_ERR      = -8,
+
+    REDEFINITION_ERR    = -9,    
 };
 
 struct Namespace_struct
