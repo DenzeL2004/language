@@ -29,6 +29,6 @@ enum Tree_node_draw_modes
 int Draw_tree_graph (const Tree *tree, const char* name_output_file, 
                      const int node_draw_mode = Mask_draw_node_modes);
 
-int Draw_database (Tree *tree, const int node_mode = Mask_draw_node_modes);
+int Draw_database (const Tree *tree, const int node_mode = Mask_draw_node_modes);
 
 #endif  //#endif _AST_DRAW_TREE_H_

@@ -5,10 +5,10 @@
 
 
 #include "AST_tree.h"
-#include "../language_dsl.h"
+#include "../config/language_dsl.h"
 
-#include "../../src/log_info/log_errors.h"
-#include "../../src/Generals_func/generals.h"
+#include "../src/log_info/log_errors.h"
+#include "../src/Generals_func/generals.h"
 
 //======================================================================================
 

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string>
 
-#include "backend.h"
+#include "convert.h"
 
 #include "../src/log_info/log_errors.h"
 #include "../AST_tree/ast_reader/ast_reader.h"
@@ -20,7 +20,7 @@ int main (int argc, char *argv[])
     if (Tree_ctor (&ast_tree))
         PROCESS_ERROR (EXIT_FAILURE, "Tree ctor failed\n");
 
-    char *name_output_file = (char*) Default_backend_output;
+    char *name_output_file = (char*) Default_convert_output;
     switch (argc)
     {
         case 1:
@@ -41,7 +41,7 @@ int main (int argc, char *argv[])
             return PROCESS_ERROR (EXIT_FAILURE, "Too many command line arguments\n");
     }
 
-    Create_asm_file (&ast_tree, name_output_file);
+    Create_convert_file (&ast_tree, name_output_file);
 
     if (Tree_dtor (&ast_tree))
         PROCESS_ERROR (EXIT_FAILURE, "Tree dtor failed\n");

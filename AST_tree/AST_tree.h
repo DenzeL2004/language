@@ -4,9 +4,9 @@
 
 #include <stdio.h>
 
-#include "../language_config.h"
+#include "../config/language_config.h"
 
-#include "../../src/tree/tree.h"
+#include "../src/tree/tree.h"
 
 
 struct AST_data

@@ -6,8 +6,8 @@
 
 #include "AST_draw_tree.h"
 
-#include "../../src/log_info/log_errors.h"
-#include "../../src/Generals_func/generals.h"
+#include "../src/log_info/log_errors.h"
+#include "../src/Generals_func/generals.h"
 
 
 
@@ -23,7 +23,7 @@ static const char *Color_selection (const AST_data* data);
 
 //======================================================================================================
 
-int Draw_database (Tree *tree, const int node_mode)
+int Draw_database (const Tree *tree, const int node_mode)
 {
     assert (tree != nullptr && "tree is nullptr");
 

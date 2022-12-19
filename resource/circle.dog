@@ -21,7 +21,7 @@ learnCommand drawBooth (coordX, coordY, rad)
             breed curX nickname (coordX bite line) scratch (coordX bite line);
             breed curY nickname (coordY bite column) scratch (coordY bite column);
             
-            if (curX lick curY nmore rad)
+            if (curX lick curY nmore rad scratch rad)
                 set_pixel (line, column, 1);
             
             column nickname column lick 1;

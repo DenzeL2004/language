@@ -82,7 +82,7 @@ int Array_set_ptr_by_ind (Array_struct *array, const int ind, void *ptr)
         Array_dump (array, LOG_ARGS);
         return ARRAY_SET_ERR;
     }
-
+    
     if (ind >= array->capacity)
         Array_recalloc (array, array->capacity * 2);
         

@@ -7,6 +7,9 @@ static const char* Default_frontend_output = "ast_tree.txt";
 
 static const char* Default_backend_output = "asm_output.txt";
 
+static const char* Default_convert_output = "unknown.dog";
+
+
 //================================================================================================
 
 
@@ -65,7 +68,7 @@ static const char* Name_type_node[] =           //Type node names in ast format
 
     "ASS",
 
-    "ELSE",
+    "ELSE"
 };
 
 static const char* Name_lang_type_node[] =     //Type node names in my language
@@ -89,7 +92,7 @@ static const char* Name_lang_type_node[] =     //Type node names in my language
 
     "nickname",
 
-    "else",
+    "else"
 };
 
 

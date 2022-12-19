@@ -1,8 +1,8 @@
 #ifndef _FRONTEND_H_
 #define _FRONTEND_H_
 
-#include "../config/AST_tree/AST_tree.h"
-#include "../config/AST_tree/AST_draw_tree.h"
+#include "../AST_tree/AST_tree.h"
+#include "../AST_tree/AST_draw_tree.h"
 
 #include "../src/array/array.h"
 

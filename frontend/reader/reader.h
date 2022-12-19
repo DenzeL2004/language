@@ -3,7 +3,7 @@
 
 #include "../../config/language_config.h"
 
-#include "../../config/AST_tree/AST_tree.h"
+#include "../../AST_tree/AST_tree.h"
 
 #include "../../src/array/array.h"
 
