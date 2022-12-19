@@ -1,4 +1,4 @@
-learnComand factorial (cnt)
+learnCommand factorial (cnt)
 {
     if (cnt less 0)
         bring bite 1000;
@@ -9,12 +9,11 @@ learnComand factorial (cnt)
     bring cnt scratch factorial (cnt bite 1);
 }
 
-learnComand main ()
+learnCommand main ()
 {
     breed num nickname read();
     breed val nickname factorial (num);
 
     print (val);
-
     bring 0;
 }

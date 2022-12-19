@@ -1,0 +1,36 @@
+learnCommand main ()
+{
+    breed coordX nickname read ();
+    breed coordY nickname read ();
+    breed rad    nickname read ();
+
+    drawBooth (coordX, coordY, rad);
+    bring 0;
+}
+
+
+learnCommand drawBooth (coordX, coordY, rad)
+{
+    breed line nickname 0;
+
+    goodBoy (line less 20)
+    {
+        breed column nickname 0;
+        goodBoy (column less 20)
+        {
+            breed curX nickname (coordX bite line) scratch (coordX bite line);
+            breed curY nickname (coordY bite column) scratch (coordY bite column);
+            
+            if (curX lick curY nmore rad)
+                set_pixel (line, column, 1);
+            
+            column nickname column lick 1;
+        }
+
+        line nickname line lick 1;
+    }
+
+    flush ();
+
+    bring 0;
+}

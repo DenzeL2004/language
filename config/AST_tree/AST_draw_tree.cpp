@@ -185,7 +185,7 @@ static void Draw_node_data (FILE *fpout, const AST_data* data)
             fprintf (fpout, "%.3lf}", data->data.val);
             break;
 
-        case VAR: case NVAR: case FUNC: case NFUNC: case CALL: 
+        case VAR: case NVAR: case FUNC: case NFUN: case CALL: 
         case PAR: case ASS: 
             fprintf (fpout, "%s}", data->data.obj);
             break;
@@ -220,7 +220,7 @@ static const char *Color_selection (const AST_data *data)
         case VAR: case NVAR:     
             return "hotpink";        
 
-        case FUNC: case NFUNC:  
+        case FUNC: case NFUN:  
              return "darkorchid1";
 
         case CALL:          

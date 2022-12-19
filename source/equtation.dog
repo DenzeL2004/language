@@ -1,0 +1,111 @@
+learnCommand squareSolver (ainu, bobtail, cat)
+{
+    if (ainu equal 0)
+        bring linerEquation (bobtail, cat);
+    
+    if (bobtail equal 0)
+        bring similarRoot (ainu, cat);
+
+    if (cat equal 0)
+        bring simpleEquation (ainu, bobtail);
+
+    bring squareEquation (ainu, bobtail, cat);
+}
+
+learnCommand simpleEquation (ainu, bobtail)
+{
+    print (2);
+    
+    print (0);
+
+    print (bite bobtail tear ainu);
+
+    bring 2;
+}
+
+learnCommand linerEquation (bobtail, cat)
+{
+    if (bobtail equal 0)
+        if (cat equal 0)
+        {
+            print (666);
+            bring 666;
+        }
+        else
+        {
+            print (0);
+            bring 0;
+        }
+
+    print (1);
+    print (bite cat tear bobtail);
+    bring 1;
+}
+
+learnCommand similarRoot (ainu, cat)
+{
+    if (ainu scratch cat more 0)
+    {
+        print (0);
+        bring 0;
+    }
+
+    if (cat equal 0)
+    {
+        print (1);
+        print (0);
+
+        bring 1;
+    }
+
+    print (2);
+    breed rottweiler nickname bite cat tear ainu;
+
+    print (rottweiler);
+    print (bite rottweiler);
+
+    bring 2;
+}
+
+learnCommand squareEquation (ainu, bobtail, cat) 
+{
+    breed dalmatian nickname bobtail scratch bobtail bite (4 scratch cat scratch ainu);
+    
+    if (dalmatian less 0)
+    {
+        print (0);
+        bring 0;
+    }
+
+    if (dalmatian equal 0)
+    {
+        print (1);
+
+        breed rottweiler nickname bite bobtail tear (2 scratch ainu);
+        print (rottweiler); 
+
+        bring 1; 
+    }
+
+    breed damaiant nickname sqrt (dalmatian);
+
+    print (2);
+    breed rottweiler   nickname (bite bobtail lick damaiant) tear (2 scratch ainu);
+    breed russianHound nickname (bite bobtail bite damaiant) tear (2 scratch ainu);
+
+    print (rottweiler);
+    print (russianHound);
+    
+    bring 2;
+}
+
+learnCommand main ()
+{
+    breed ainu      nickname read ();
+    breed bobtail   nickname read ();
+    breed cat       nickname read ();
+
+    squareSolver (ainu, bobtail, cat);
+
+    bring 0;
+}

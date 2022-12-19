@@ -42,7 +42,7 @@ static int Compile_defs     (FILE *fpout, const Node *node, Namespace_struct *cu
 
 static int Compile_nvar     (FILE *fpout, const Node *node, Namespace_struct *cur_namespace);
 
-static int Compile_nfunc    (FILE *fpout, const Node *node, Namespace_struct *cur_namespace);
+static int Compile_nfun    (FILE *fpout, const Node *node, Namespace_struct *cur_namespace);
 
 static int Compile_call     (FILE *fpout, const Node *node, Namespace_struct *cur_namespace);
 
@@ -208,7 +208,7 @@ static int Check_function_call (const Node *node, Name_table *function_names)
     
     if (GET_TYPE (node) == ARG || GET_TYPE (node) == PAR) cnt++;
 
-    if (GET_TYPE (node) == NFUNC)
+    if (GET_TYPE (node) == NFUN)
     {
         int id = Find_id_object (function_names, GET_DATA (node, obj));
         if (id != Not_init_object)
@@ -228,7 +228,7 @@ static int Check_function_call (const Node *node, Name_table *function_names)
         {
             int cnt_param = *((int*) function_names->objects[id].data);
             if (cnt != cnt_param)
-                PROCESS_ERROR (INCORRECT_CNT_ARG, "\nFunction \'%s\' function has the wrong number of arguments: %d. "
+                PROCESS_ERROR (INCORRECT_CNT_ARG, "\NFUNtion \'%s\' function has the wrong number of arguments: %d. "
                                "Must be: %d\n", GET_DATA (node, obj), cnt, cnt_param);
         }
 
@@ -288,7 +288,7 @@ static int Compile (FILE *fpout, const Node *node, Namespace_struct *cur_namespa
         case NVAR:  Compile_nvar    (fpout, node, cur_namespace);
             break;
 
-        case NFUNC: Compile_nfunc   (fpout, node, cur_namespace);
+        case NFUN: Compile_nfun   (fpout, node, cur_namespace);
             break;
         
         case PAR:   Compile_par   (fpout, node, cur_namespace);
@@ -384,7 +384,7 @@ static int Compile_nvar (FILE *fpout, const Node *node, Namespace_struct *cur_na
 
 //======================================================================================================
 
-static int Compile_nfunc (FILE *fpout, const Node *node, Namespace_struct *cur_namespace)
+static int Compile_nfun (FILE *fpout, const Node *node, Namespace_struct *cur_namespace)
 {
     assert (fpout != nullptr && "fpout is nullptr");
     assert (cur_namespace != nullptr && "name_table is nullptr");
@@ -428,6 +428,8 @@ static int Compile_par (FILE *fpout, const Node *node, Namespace_struct *cur_nam
 
     fprintf (fpout, "   //Definition_param_\'%s\'\n\n", GET_DATA (node, obj));
 
+    Compile (fpout, node->right, cur_namespace);
+
     return 0;
 }
 
@@ -467,6 +469,8 @@ static int Compile_call (FILE *fpout, const Node *node, Namespace_struct *cur_na
     fprintf (fpout, "//arguments_function_\'%s\'\n\n", GET_DATA (node, obj));
     
     fprintf (fpout, "push %d\n", cur_namespace->free_cell);
+    fprintf (fpout, "push rax\n");
+    fprintf (fpout, "ADD    //pointer_variable_offset\n");
 
     fprintf (fpout, "call %s\n", GET_DATA (node, obj));
     
@@ -541,12 +545,14 @@ static int Compile_branch (FILE *fpout, const Node *node, Namespace_struct *cur_
     int cur_if = cnt_if;
 
     Compile (fpout,  node->left,  cur_namespace);
+    if (GET_TYPE (node->left) == CALL) fprintf (fpout, "pop rbx\n");
 
     fprintf (fpout, "jump if%d_true_exit\n", cur_if);
     
     fprintf (fpout, "if%d_false:\n", cur_if);
 
     Compile (fpout,  node->right,  cur_namespace);
+    if (!Check_nullptr (node->right) && GET_TYPE (node->right) == CALL) fprintf (fpout, "pop rbx\n");
 
     fprintf (fpout, "if%d_true_exit:\n", cur_if);
 
@@ -571,6 +577,8 @@ static int Compile_while (FILE *fpout, const Node *node, Namespace_struct *cur_n
     fprintf (fpout, "while%d:\n", cur_while);
 
     Compile (fpout, node->right, cur_namespace);
+
+    if (GET_TYPE (node->right) == CALL) fprintf (fpout, "pop rbx\n");
 
 
     Compile (fpout, node->left, cur_namespace);
@@ -757,7 +765,6 @@ static Node* Build_tree (int *pos, const Array_struct *tokens)
         return nullptr;
     }
     
-
     Node *node = Read_node_from_buffer (pos, tokens); 
 
     node->left  = Build_tree (pos, tokens); 

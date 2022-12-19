@@ -15,7 +15,7 @@ enum Node_type
     UNKNOWN_T = 0,
 
     DEFS      =  1,
-    NFUNC     =  2,
+    NFUN      =  2,
     NVAR      =  3,
 
     BLOCK     =  4, 
@@ -48,7 +48,7 @@ static const char* Name_type_node[] =           //Type node names in ast format
 {
     "UNKNOWN_T", 
 
-    "DEFS", "NFUNC", "NVAR",      
+    "DEFS", "NFUN", "NVAR",      
 
     "BLOCK", 
 
@@ -72,7 +72,7 @@ static const char* Name_lang_type_node[] =     //Type node names in my language
 {
     "UNKNOWN_T", 
 
-    "DEFS", "learnComand", "breed",      
+    "DEFS", "learnCommand", "breed",      
 
     "BLOCK", 
 
@@ -159,19 +159,18 @@ static const char* Name_lang_operations[] =     //Operation names in language
 
 static const char *Name_standard_func[] =
 {
-    "sqrt",
-    "abs",
+    "sqrt", "abs",
 
-    "read"
-    "print"
+    "read", "print",
 
-    "set_pixel",
-    "flush"
+    "set_pixel", "flush"
 };
 
 static const int Cnt_param_standart_func[] =
 {
-    1, 1, 0, 1, 1, 0
+    1, 1, 
+    0, 1, 
+    3, 0
 };
 
 //================================================================================================

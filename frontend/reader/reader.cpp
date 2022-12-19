@@ -160,7 +160,7 @@ static Node* Definition_objects (int *pos, const Array_struct *tokens)
 
 static inline int Is_definition (char *token)
 {
-    return (!strcmp (token, Name_lang_type_node [NVAR]) || !strcmp (token, Name_lang_type_node [NFUNC]));
+    return (!strcmp (token, Name_lang_type_node [NVAR]) || !strcmp (token, Name_lang_type_node [NFUN]));
 }
 
 //=================================================================================================
@@ -171,12 +171,12 @@ static Node* Definition_function (int *pos, const Array_struct *tokens)
     assert (pos != nullptr && "pos is nullptr");
 
     char *cur_token = GET_TOKEN (*pos);
-    if (strcmp (cur_token, Name_lang_type_node [NFUNC])) return nullptr;
+    if (strcmp (cur_token, Name_lang_type_node [NFUN])) return nullptr;
    
     (*pos)++;
 
     Node *node = Create_empty_node ();
-    DEF_TYPE (node, NFUNC);
+    DEF_TYPE (node, NFUN);
     
     cur_token = GET_TOKEN (*pos);
 
