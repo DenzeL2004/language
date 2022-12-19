@@ -79,6 +79,26 @@ int Add_object (Name_table *name_table, const char *name_new_object, const int t
 
 //======================================================================================
 
+int Del_object (Name_table *name_table, const int id) 
+{
+    assert (name_table != nullptr && "name_table is nullptr");
+    
+    if (name_table->cnt_object <= id)
+        return PROCESS_ERROR (DELETE_OBJECT_ERR, "id: %d >=  cnt_ object: %d", id, name_table->cnt_object);
+
+    free(name_table->objects[id].data);
+    name_table->objects[id].name = nullptr;
+        
+    name_table->objects[id].name_hash = 0;
+    name_table->objects[id].type = OBJ_UNKNOWN_T;
+
+    name_table->cnt_object--;
+
+    return id;
+}
+
+//======================================================================================
+
 static int Object_init (Object *object, const char* name, const int type) 
 {
     assert (object != nullptr && "object is nullptr");

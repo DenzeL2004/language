@@ -50,6 +50,8 @@ int Create_convert_file (const Tree *ast_tree, const char* name_output_file)
 {
     assert (ast_tree !=  nullptr && "ast_tree is nullptr");
 
+    Draw_database (ast_tree);
+
     FILE* fpout = Open_file_ptr (name_output_file, "w");
     if (Check_nullptr (fpout))
         return PROCESS_ERROR (ERR_FILE_OPEN, "open output file \'%s\' error", name_output_file);
@@ -137,7 +139,12 @@ static int Write_defs (FILE *fpout, const Node *node, const int shift)
     assert (fpout != nullptr && "fpout is nullptr");
    
     Write_to_file (fpout, node->left, shift);
+    if (GET_TYPE (node->left) == NVAR) fprintf (fpout, ";\n");
+
     Write_to_file (fpout, node->right, shift);
+
+    if (!Check_nullptr (node->right))
+        if (GET_TYPE (node->right) == NVAR) fprintf (fpout, ";\n");
 
     return 0;
 }
@@ -350,7 +357,9 @@ static int Write_seq (FILE *fpout, const Node *node, const int shift)
    fprintf (fpout, "%*c", shift, ' ');
 
     Write_to_file (fpout, node->left,  shift); 
-    if (GET_TYPE (node->left) != IF && GET_TYPE (node->left) != WHILE)
+    
+    int cur_type = GET_TYPE (node->left);
+    if (cur_type != IF && cur_type != WHILE && cur_type != BLOCK)
         fprintf (fpout, ";\n");
     Write_to_file (fpout, node->right, shift);
 

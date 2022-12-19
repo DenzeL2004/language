@@ -31,6 +31,8 @@ enum Name_tabel_func_err
     RECALLOC_MEMORY_ERR = -4,
 
     ADD_OBJECT_ERR      = -5,
+
+    DELETE_OBJECT_ERR   = -6,
 };
 
 
@@ -62,5 +64,7 @@ int Add_object (Name_table *name_table, const char *name_new_object, const int t
 
 
 int Find_id_object (const Name_table *name_table, const char *name_new_object);
+
+int Del_object (Name_table *name_table, const int id);
 
 #endif //#endif _NAME_TABLE_H_

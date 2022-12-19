@@ -133,8 +133,8 @@ static const char* Name_operations[] =          //Operation names in ast format
 
     "DF",          
 
-    "GT", "NLT", 
-    "LT", "NGT",     
+    "GT", "GEQ", 
+    "LT", "LEQ",     
     "EQ", "NEQ",
 
     "NEG"         

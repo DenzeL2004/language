@@ -509,16 +509,15 @@ static int Compile_if (FILE *fpout, const Node *node, Namespace_struct *cur_name
     
     fprintf (fpout, "je if%d_false\n", cur_if);
 
-    Namespace_struct *dup_namespace = Dup_namespace (cur_namespace);
-    if (Check_nullptr (dup_namespace)) 
-        return PROCESS_ERROR (ERR_MEMORY_ALLOC, "Failed duplicate \'cur_namespace\'\n");
-    Compile (fpout,  node->right,  dup_namespace);
+    int back_ptr = cur_namespace->free_cell;
+    Compile (fpout,  node->right,  cur_namespace);
 
     fprintf (fpout, "\n//СONDITION%d_END\n", cur_if);
 
-    if (Namespace_struct_dtor (dup_namespace))
-        return PROCESS_ERROR (NAMESPACE_DTOR_ERR, "Dtor \'dup_namespace\' error\n");
-
+    int cnt_max = cur_namespace->free_cell;
+    for (int id = back_ptr; id < cnt_max; id++)
+        Del_object (&cur_namespace->name_table, id);
+    
     return 0;
 }
 

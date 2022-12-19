@@ -60,7 +60,7 @@ int Load_ast_tree (Tree *ast_tree, const char *name_input_file)
 
     int pos = 0;
     ast_tree->root = Build_tree (&pos, &tokens);
-
+    
     if (Check_nullptr (ast_tree->root))   
         return PROCESS_ERROR (READ_AST_FORMAT, "Error read a tree with a pointer to the root |%p|",
                                                (char*) ast_tree->root);
