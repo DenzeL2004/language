@@ -341,8 +341,8 @@ static int Write_oper (FILE *fpout, const Node *node, const int shift)
 static int Write_assig (FILE *fpout, const Node *node, const int shift)
 {
     assert (fpout != nullptr && "fpout is nullptr");
-   
-    fprintf (fpout, "%s %s ", GET_DATA (node, obj), Name_lang_operations[ASS]);
+    
+    fprintf (fpout, "%s %s ", GET_DATA (node, obj), Name_lang_type_node[ASS]);
     Write_to_file (fpout, node->right, shift);
 
     return 0;

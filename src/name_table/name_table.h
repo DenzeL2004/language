@@ -18,7 +18,8 @@ enum Type_object
     
     OBJ_VAR         =  0,
     OBJ_FUNC        =  1,
-    OBJ_PARAM       =  2,
+    OBJ_CALL_FUNC   =  3,
+    OBJ_PARAM       =  4,
 };
 
 

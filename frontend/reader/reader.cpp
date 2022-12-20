@@ -402,7 +402,7 @@ static Node* Read_if (int *pos, const Array_struct *tokens)
 
     if (strcmp (cur_token, Name_lang_type_node [IF])) return nullptr;
 
-     Node *node = Create_empty_node ();
+    Node *node = Create_empty_node ();
     DEF_TYPE (node, IF);
 
     (*pos)++;

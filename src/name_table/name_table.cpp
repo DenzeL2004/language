@@ -83,9 +83,6 @@ int Del_object (Name_table *name_table, const int id)
 {
     assert (name_table != nullptr && "name_table is nullptr");
     
-    if (name_table->cnt_object <= id)
-        return PROCESS_ERROR (DELETE_OBJECT_ERR, "id: %d >=  cnt_ object: %d", id, name_table->cnt_object);
-
     free(name_table->objects[id].data);
     name_table->objects[id].name = nullptr;
         

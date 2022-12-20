@@ -144,10 +144,12 @@ static Node* Read_node_from_buffer (int *pos, const Array_struct *tokens)
 
     (*pos)++;
     cur_token = GET_TOKEN (*pos);
+    
 
     if (strcmp (cur_token, ","))
     {
-        PROCESS_ERROR (READ_NODE_ERR, "no \',\' after node data.\n cur_tolen: %s", cur_token);
+        printf ("*pos %d\n", *pos);
+        PROCESS_ERROR (READ_NODE_ERR, "no \',\' after node data.\n cur_token: %s", cur_token);
         return nullptr;
     }
 
@@ -157,22 +159,31 @@ static Node* Read_node_from_buffer (int *pos, const Array_struct *tokens)
 
     if (!strcmp (cur_token, "NULL"))
         CHANGE_DATA (node, obj, nullptr);
-    else if (isdigit (cur_token[0]))
-        CHANGE_DATA (node, val, atof (cur_token));
     else
     {
-        int op = Define_operation (cur_token);
-        if (op == UNKNOWN_OP)
-            CHANGE_DATA (node, obj, cur_token);
+        if (Check_num (cur_token))
+        {
+            if (!strcmp (cur_token, "-")) (*pos)++;
+            CHANGE_DATA (node, val, atof (GET_TOKEN (*pos)));
+        }
+
         else
-            CHANGE_DATA (node, operation, op);
+        {
+            int op = Define_operation (cur_token);
+            if (op == UNKNOWN_OP)
+                CHANGE_DATA (node, obj, cur_token);
+            else
+                CHANGE_DATA (node, operation, op);
+        }
     }
+        
 
     (*pos)++;
     cur_token = GET_TOKEN (*pos);
 
     if (strcmp (cur_token, ","))
     {
+         printf ("*pos %d\n", *pos);
         PROCESS_ERROR (READ_NODE_ERR, "no \',\' after node data.\n cur_token: %s", cur_token);
         return nullptr;
     }

@@ -125,6 +125,10 @@ int Create_asm_file (const Tree *ast_tree, const char* name_output_file)
 {
     assert (ast_tree !=  nullptr && "ast_tree is nullptr");
 
+    #ifdef LOOK_BACKEND_AST_TREE
+        Draw_database (ast_tree);
+    #endif
+
     if (Namespace_check (ast_tree))
         return PROCESS_ERROR (COMPILATION_ERR, "\n");
 
@@ -505,7 +509,6 @@ static int Compile_if (FILE *fpout, const Node *node, Namespace_struct *cur_name
 
     Compile (fpout,  node->left,  cur_namespace);
     fprintf (fpout, "push 0\n");
-
     
     fprintf (fpout, "je if%d_false\n", cur_if);
 

@@ -34,8 +34,6 @@ int Namespace_struct_ctor (Namespace_struct *namespace_struct);
 
 int Namespace_struct_dtor (Namespace_struct *namespace_struct);
 
-Namespace_struct* Dup_namespace (const Namespace_struct *namespace_struct);
-
 
 int Create_asm_file (const Tree *ast_tree, const char* name_output_file = Default_backend_output);
 
