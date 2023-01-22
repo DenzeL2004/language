@@ -27,16 +27,16 @@ int main (int argc, char *argv[])
 
     char command[Init_buffer] = "";
 
-    sprintf (command, "frontend.exe resource/%s.dog temp/ast_format/ast_%s.ast", argv[1], argv[1]);
+    sprintf (command, "./front resource/%s.dog temp/ast_format/ast_%s.ast", argv[1], argv[1]);
     if (system (command)) return PROCESS_ERROR (EXIT_FAILURE, "frontend error\n");
 
-    sprintf (command, "backend.exe temp/ast_format/ast_%s.ast temp/asm_format/asm_%s.txt", argv[1], argv[1]);
+    sprintf (command, "./back temp/ast_format/ast_%s.ast temp/asm_format/asm_%s.txt", argv[1], argv[1]);
     if (system (command)) return PROCESS_ERROR (EXIT_FAILURE, "backend error\n");
 
-    sprintf (command, "assembler.exe temp/asm_format/asm_%s.txt temp/bin/%s.bin", argv[1], argv[1]);
+    sprintf (command, "./assembler_run temp/asm_format/asm_%s.txt temp/bin/%s.bin", argv[1], argv[1]);
     if (system (command)) return PROCESS_ERROR (EXIT_FAILURE, "assembler error\n");
 
-    sprintf (command, "proc.exe temp/bin/%s.bin", argv[1]);
+    sprintf (command, "./proc_run temp/bin/%s.bin", argv[1]);
     if (system (command)) return PROCESS_ERROR (EXIT_FAILURE, "processor error\n");
 
 

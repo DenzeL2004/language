@@ -1,4 +1,4 @@
-all: mkdirectory mksupporddirectory build_convert build_front build_back run
+all: mkdirectory mksupporddirectory build_front build_back build_convert run
 
 FLAGS = -Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-equal -Winline -Wunreachable-code -Wmissing-declarations 		\
 		-Wmissing-include-dirs -Wswitch-enum -Wswitch-default -Weffc++ -Wmain -Wextra -Wall -g -pipe -fexceptions -Wcast-qual -Wconversion	\
@@ -9,7 +9,7 @@ FLAGS = -Wshadow -Winit-self -Wredundant-decls -Wcast-align -Wundef -Wfloat-equa
 FRONT_DIR = frontend
 
 
-run: obj/main.o obj/generals.o obj/log_errors.o assembler/assembler.exe
+run: obj/main.o obj/generals.o obj/log_errors.o
 	g++ obj/main.o obj/generals.o obj/log_errors.o -o run
 
 build_front: obj/frontend_main.o obj/tree.o obj/generals.o obj/log_errors.o obj/process_text.o obj/array.o 				\
@@ -17,7 +17,7 @@ build_front: obj/frontend_main.o obj/tree.o obj/generals.o obj/log_errors.o obj/
 				
 
 			g++ obj/frontend_main.o obj/tree.o obj/generals.o obj/log_errors.o obj/process_text.o obj/array.o			\
-				obj/frontend.o obj/AST_tree.o obj/AST_draw_tree.o obj/lexer.o  obj/reader.o obj/ast_reader.o -o frontend						
+				obj/frontend.o obj/AST_tree.o obj/AST_draw_tree.o obj/lexer.o  obj/reader.o obj/ast_reader.o -o front						
 
 
 build_back: obj/backend_main.o obj/tree.o obj/generals.o obj/log_errors.o obj/process_text.o obj/array.o	 			\
@@ -25,7 +25,7 @@ build_back: obj/backend_main.o obj/tree.o obj/generals.o obj/log_errors.o obj/pr
 				
 
 			g++ obj/backend_main.o obj/tree.o obj/generals.o obj/log_errors.o obj/process_text.o obj/ast_reader.o		\
-				obj/backend.o obj/AST_tree.o obj/AST_draw_tree.o obj/lexer.o obj/array.o obj/name_table.o 	-o backend
+				obj/backend.o obj/AST_tree.o obj/AST_draw_tree.o obj/lexer.o obj/array.o obj/name_table.o 	-o back
 
 
 build_convert: obj/convert_main.o obj/tree.o obj/generals.o obj/log_errors.o obj/process_text.o obj/array.o	 			\
@@ -33,7 +33,7 @@ build_convert: obj/convert_main.o obj/tree.o obj/generals.o obj/log_errors.o obj
 				
 
 			g++ obj/convert_main.o obj/tree.o obj/generals.o obj/log_errors.o obj/process_text.o obj/ast_reader.o		\
-				obj/convert.o obj/AST_tree.o obj/AST_draw_tree.o obj/lexer.o obj/array.o obj/name_table.o 	-o convert
+				obj/convert.o obj/AST_tree.o obj/AST_draw_tree.o obj/lexer.o obj/array.o obj/name_table.o 	-o conv
 
 
 obj/main.o: main.cpp

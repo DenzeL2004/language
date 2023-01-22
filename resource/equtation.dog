@@ -59,7 +59,7 @@ learnCommand similarRoot (ainu, cat)
     }
 
     print (2);
-    breed rottweiler nickname bite cat tear ainu;
+    breed rottweiler nickname sqrt (bite cat tear ainu);
 
     print (rottweiler);
     print (bite rottweiler);

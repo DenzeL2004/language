@@ -221,7 +221,7 @@ static int Check_function_call (const Node *node, Name_table *function_names)
         {
             int cnt_param = *((int*) function_names->objects[id].data);
             if (cnt != cnt_param)
-                PROCESS_ERROR (INCORRECT_CNT_ARG, "\NFUNtion \'%s\' function has the wrong number of arguments: %d. "
+                PROCESS_ERROR (INCORRECT_CNT_ARG, "function \'%s\' function has the wrong number of arguments: %d. "
                                "Must be: %d\n", GET_DATA (node, obj), cnt, cnt_param);
         }
 
@@ -238,13 +238,13 @@ static int Write_begin_program (FILE *fpout)
     assert (fpout != nullptr && "fpout is nullptr");
 
     fprintf (fpout, "push 0\n");
-    fprintf (fpout, "pop rax\n");
+    fprintf (fpout, "pop rax\n\n");
 
     fprintf (fpout, "call main\n");
 
     fprintf (fpout, "hlt\n\n");
 
-    int fdin = Open_file_discriptor ("../language/config/standart_func.txt", O_RDONLY);
+    int fdin = Open_file_discriptor ("../language/config/standatr_functions.txt", O_RDONLY);
     if (fdin < 0)
         return PROCESS_ERROR (ERR_FILE_OPEN, "Error opening file\n");
 
