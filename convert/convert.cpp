@@ -50,8 +50,6 @@ int Create_convert_file (const Tree *ast_tree, const char* name_output_file)
 {
     assert (ast_tree !=  nullptr && "ast_tree is nullptr");
 
-    Draw_database (ast_tree);
-
     FILE* fpout = Open_file_ptr (name_output_file, "w");
     if (Check_nullptr (fpout))
         return PROCESS_ERROR (ERR_FILE_OPEN, "open output file \'%s\' error", name_output_file);
@@ -234,13 +232,13 @@ static int Write_arg (FILE *fpout, const Node *node, const int shift)
 {
     assert (fpout != nullptr && "fpout is nullptr");
 
-    Write_to_file (fpout, node->left, shift);
-
     if (!Check_nullptr (node->right))
     {
+        Write_to_file (fpout, node->right, shift); 
         fprintf (fpout, ", ");
-        Write_to_file (fpout, node->right, shift);
     }
+
+    Write_to_file (fpout, node->left, shift);
 
     return 0;
 }

@@ -30,7 +30,7 @@ int Draw_database (const Tree *tree, const int node_mode)
     static int Cnt_graphs = 0;      //<-To display the current tree view
 
     char name_output_file[Max_command_buffer] = "";
-    sprintf (name_output_file, "graph_img\\picture%d.png", Cnt_graphs); 
+    sprintf (name_output_file, "graph_img/picture%d.png", Cnt_graphs); 
 
     Cnt_graphs++;
 
@@ -38,7 +38,7 @@ int Draw_database (const Tree *tree, const int node_mode)
         return PROCESS_ERROR (DRAW_DATABASE_ERR, "Error in graph drawing\n");
 
     char command_buffer[Max_command_buffer] = {0};
-    sprintf(command_buffer, "@temp\\%s", name_output_file);
+    sprintf(command_buffer, "open temp/%s", name_output_file);
 
     if (system (command_buffer))
         return PROCESS_ERROR (DRAW_DATABASE_ERR, "Failed to open image\n");
