@@ -220,6 +220,9 @@ static const char *Color_selection (const AST_data *data)
         case VAR: case NVAR:     
             return "hotpink";        
 
+        case NARR: 
+            return "hotpink";
+
         case FUNC: case NFUN:  
              return "darkorchid1";
 

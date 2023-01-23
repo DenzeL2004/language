@@ -45,6 +45,7 @@ enum Node_type
 
     ELSE      = 18,
 
+    NARR      = 19
 };
 
 static const char* Name_type_node[] =           //Type node names in ast format
@@ -68,7 +69,9 @@ static const char* Name_type_node[] =           //Type node names in ast format
 
     "ASS",
 
-    "ELSE"
+    "ELSE",
+
+    "NARR",
 };
 
 static const char* Name_lang_type_node[] =     //Type node names in my language
@@ -92,7 +95,9 @@ static const char* Name_lang_type_node[] =     //Type node names in my language
 
     "nickname",
 
-    "else"
+    "else",
+
+    "pack"
 };
 
 

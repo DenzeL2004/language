@@ -22,6 +22,10 @@ static Node* Definition_variable (int *pos, const Array_struct *tokens);
 
 //-------------------------------------------------------------------------------
 
+static Node* Definition_array    (int *pos, const Array_struct *tokens);
+
+bool Check_capacity (char *token);
+
 //-------------------------------------------------------------------------------
 //RULE: DEFINITION FUNCTION
 
@@ -53,7 +57,7 @@ static Node* Get_logical_not (int *pos, const Array_struct *tokens);
 
 static Node* Get_logical_and (int *pos, const Array_struct *tokens);
 
-static Node* Get_logical_or (int *pos, const Array_struct *tokens);
+static Node* Get_logical_or  (int *pos, const Array_struct *tokens);
 
 //-------------------------------------------------------------------------------
 
@@ -144,6 +148,8 @@ static Node* Definition_objects (int *pos, const Array_struct *tokens)
         
         if (!strcmp (cur_token, Name_lang_type_node [NVAR]))
             node->left = Definition_variable (pos, tokens);
+        else if (!strcmp (cur_token, Name_lang_type_node [NARR]))
+            node->left = Definition_array (pos, tokens);  
         else
             node->left = Definition_function (pos, tokens);
     }
@@ -160,7 +166,100 @@ static Node* Definition_objects (int *pos, const Array_struct *tokens)
 
 static inline int Is_definition (char *token)
 {
-    return (!strcmp (token, Name_lang_type_node [NVAR]) || !strcmp (token, Name_lang_type_node [NFUN]));
+    return (!strcmp (token, Name_lang_type_node [NVAR]) || !strcmp (token, Name_lang_type_node [NFUN]) ||
+            !strcmp (token, Name_lang_type_node [NARR]));
+}
+
+//=================================================================================================
+
+static Node* Definition_array (int *pos, const Array_struct *tokens)
+{
+    assert (tokens != nullptr && "tokens is nullptr");
+    assert (pos != nullptr && "pos is nullptr");
+
+    char *cur_token = GET_TOKEN (*pos);
+    if (strcmp (cur_token, Name_lang_type_node [NARR])) return nullptr;
+   
+    (*pos)++;
+
+    Node *node = Create_empty_node ();
+    DEF_TYPE (node, NARR);
+    
+    cur_token = GET_TOKEN (*pos);
+
+    if (Is_reserved_word (cur_token))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "a reserved word \"%s\" has been used as a array name", cur_token);
+        return nullptr;
+    }
+
+    CHANGE_DATA (node, obj, cur_token);
+
+    (*pos)++;
+    cur_token = GET_TOKEN (*pos);
+
+    if (strcmp (cur_token, "["))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "Definition array must has \'[\' after name.\n"
+                                   "cur_token: %s", cur_token);
+        return nullptr;
+    }
+
+    (*pos)++;
+    
+
+    cur_token = GET_TOKEN (*pos);
+
+    if (!Check_capacity (cur_token))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "Array's capacity mustn't be \'%s\'.\n", cur_token);
+        return nullptr;
+    }
+
+    node->right = CREATE_VAL_NODE (atof (cur_token));
+    
+    (*pos)++;
+    cur_token = GET_TOKEN (*pos);
+    
+    if (strcmp(cur_token, "]"))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "not \']\' after \'[\',"
+                                    " cur_token: |%s|.\n", cur_token);
+        return nullptr;
+    }
+
+    (*pos)++;
+    cur_token = GET_TOKEN (*pos);
+
+    if (strcmp (cur_token, ";"))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "expressin must be end \';\'");
+        return nullptr;
+    }
+
+    (*pos)++;
+
+    return node;
+}
+
+//=================================================================================================
+
+bool Check_capacity (char *token)
+{
+    assert (token != nullptr && "token is nullptr");
+
+    if (token[0] == '-')
+        return false;
+
+    int id = 0;
+    while (token[id] != '\0')
+    {
+        if (!(token[id] >= '0' && token[id] <= '9'))
+            return false;
+        id++;
+    }
+
+    return true;
 }
 
 //=================================================================================================
@@ -334,6 +433,9 @@ static Node* Read_statement (int *pos, const Array_struct *tokens)
 
     if (Is_reserved_word (cur_token))
     {
+        if (!strcmp (cur_token, Name_lang_type_node [NARR]))
+            return Definition_array (pos, tokens);
+
         if (!strcmp (cur_token, Name_lang_type_node [NVAR]))
             return Definition_variable (pos, tokens);
 
@@ -994,7 +1096,7 @@ static Node* Get_priority (int *pos, const Array_struct *tokens)
             if (errno == ERANGE)
                 PROCESS_ERROR (STR_CONVERT_ERR, "Unable to convert from string to double number, cur_token: %s", cur_token);
             
-            node = Create_value_node (val, nullptr, nullptr);
+            node = CREATE_VAL_NODE (val);
 
             (*pos)++;
         }

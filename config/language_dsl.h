@@ -1,7 +1,7 @@
 #ifndef _LANGUAGE_DSL_
 #define _LANGUAGE_DSL_
 
-#define CREATE_VAL(val) Create_value_node ((val), nullptr, nullptr)
+#define CREATE_VAL_NODE(val) Create_value_node ((val), nullptr, nullptr)
 
 #define CHANGE_DATA(node, union_param, value)                                       \
     ((AST_data*) (node)->data)->data.union_param  = (value)
