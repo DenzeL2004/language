@@ -241,7 +241,7 @@ static int Write_begin_program (FILE *fpout)
     assert (fpout != nullptr && "fpout is nullptr");
 
     fprintf (fpout, "push 0\n");
-    fprintf (fpout, "pop rax\n\n");
+    fprintf (fpout, "pop rbp\n\n");
 
     fprintf (fpout, "call main\n");
 
@@ -364,7 +364,7 @@ static int Compile_nvar (FILE *fpout, const Node *node, Namespace_struct *cur_na
     if (!Check_nullptr (node->right))
     {
         Compile (fpout, node->right, cur_namespace);
-        fprintf (fpout, "pop [%d+rax]", cur_namespace->free_cell);
+        fprintf (fpout, "pop [%d+rbp]", cur_namespace->free_cell);
     }  
     
     int id = Find_id_object (&cur_namespace->name_table, GET_DATA (node, obj));
@@ -411,7 +411,7 @@ static int Compile_nfun (FILE *fpout, const Node *node, Namespace_struct *cur_na
 
     fprintf (fpout, "\n%s:\n", GET_DATA (node, obj));
     fprintf (fpout, "pop rlx    //save_pointer_to_where_to_return_after_the_function_terminates\n");
-    fprintf (fpout, "pop rax    \n");
+    fprintf (fpout, "pop rbp    \n");
 
     Namespace_struct new_namespace = {};
     if (Namespace_struct_ctor (&new_namespace))
@@ -434,7 +434,7 @@ static int Compile_par (FILE *fpout, const Node *node, Namespace_struct *cur_nam
     assert (fpout != nullptr && "fpout is nullptr");
     assert (cur_namespace != nullptr && "name_table is nullptr");
 
-    fprintf (fpout, "\npop [%d+rax]", cur_namespace->free_cell);
+    fprintf (fpout, "\npop [%d+rbp]", cur_namespace->free_cell);
 
     int id = Find_id_object (&cur_namespace->name_table, GET_DATA (node, obj));
     if (id != Not_init_object)
@@ -480,7 +480,7 @@ static int Compile_call (FILE *fpout, const Node *node, Namespace_struct *cur_na
     fprintf (fpout, "\n//Begin_call_function\n");
 
     fprintf (fpout, "push rlx   //Put_on_stack_pointer_to_where_to_return_after_the_function_terminates\n");
-    fprintf (fpout, "push rax   //Put_on_stack_pointer_where_the_variables_of_the_current_function_were_located\n");
+    fprintf (fpout, "push rbp   //Put_on_stack_pointer_where_the_variables_of_the_current_function_were_located\n");
 
     fprintf (fpout, "\n//arguments_function_\'%s\':\n", GET_DATA (node, obj));
 
@@ -489,13 +489,13 @@ static int Compile_call (FILE *fpout, const Node *node, Namespace_struct *cur_na
     fprintf (fpout, "//arguments_function_\'%s\'\n\n", GET_DATA (node, obj));
     
     fprintf (fpout, "push %d\n", cur_namespace->free_cell);
-    fprintf (fpout, "push rax\n");
+    fprintf (fpout, "push rbp\n");
     fprintf (fpout, "ADD    //pointer_variable_offset\n");
 
     fprintf (fpout, "call %s\n", GET_DATA (node, obj));
     
     fprintf (fpout, "pop rbx    //Put_on_stack_returned_function_val\n");
-    fprintf (fpout, "pop rax    //Save_pointer_where_the_variables_of_the_current_function_were_located\n");
+    fprintf (fpout, "pop rbp    //Save_pointer_where_the_variables_of_the_current_function_were_located\n");
     
     fprintf (fpout, "pop rlx    //Save_pointer_to_where_to_return_after_the_function_terminates\n");
     
@@ -639,7 +639,7 @@ static int Compile_assig (FILE *fpout, const Node *node, Namespace_struct *cur_n
     if (id == Not_init_object)
         return PROCESS_ERROR (UNINIT_VAR_ERR, "an uninitialized variable \'%s\' is used", GET_DATA (node, obj));
 
-    fprintf (fpout, "pop [%d+rax]", GET_MEM_CELL(id));
+    fprintf (fpout, "pop [%d+rbp]", GET_MEM_CELL(id));
     fprintf (fpout, "   //assigning_a_value_to_a_variable_\'%s\'\n\n", GET_DATA (node, obj));
 
     return 0;
@@ -696,7 +696,7 @@ static int Compile_var (FILE *fpout, const Node *node, Namespace_struct *cur_nam
     if (id == Not_init_object)
         return PROCESS_ERROR (UNINIT_VAR_ERR, "an uninitialized variable \'%s\' is used", GET_DATA (node, obj));
 
-    fprintf (fpout, "push [%d+rax]  //Put_on_stack_value_var_'%s'\n", GET_MEM_CELL(id), GET_DATA (node, obj));
+    fprintf (fpout, "push [%d+rbp]  //Put_on_stack_value_var_'%s'\n", GET_MEM_CELL(id), GET_DATA (node, obj));
     
     return 0;
 }
@@ -718,7 +718,7 @@ static int Compile_aar (FILE *fpout, const Node *node, Namespace_struct *cur_nam
     fprintf (fpout, "\n//ARR_%s_index_calculation_BEGIN\n", GET_DATA (node, obj));
     Compile (fpout, node->left, cur_namespace);
     
-    fprintf (fpout, "\npush rax\n");
+    fprintf (fpout, "\npush rbp\n");
     fprintf (fpout, "add\n");
     fprintf (fpout, "pop rcx\n");
 
