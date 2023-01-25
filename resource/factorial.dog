@@ -11,12 +11,8 @@ learnCommand factorial (cnt)
 
 learnCommand main ()
 {
-
-        
     breed num nickname read();
     breed val nickname factorial (num);
-    
-    pack puppy [1000];
 
     print (val);
     bring 0;

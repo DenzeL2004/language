@@ -37,10 +37,10 @@ int Name_table_ctor (Name_table *name_table)
 int Name_table_dtor (Name_table *name_table)
 {
     assert (name_table != nullptr && "str is nullptr");
-
+    
     for (int id = 0; id < name_table->cnt_object; id++)
         free (name_table->objects[id].data);
-
+    
     name_table->cnt_object  = -1;
     name_table->capacity    = -1;
 
@@ -108,7 +108,6 @@ static int Object_init (Object *object, const char* name, const int type)
     return 0;
 }
 
-
 //======================================================================================
 
 static inline int Check_cnt_object (Name_table *name_table)
@@ -121,14 +120,20 @@ static inline int Check_cnt_object (Name_table *name_table)
 static int Recalloc_name_table (Name_table *name_table)
 {
     assert (name_table != nullptr && "name_table is nullptr");
-    
-    name_table->capacity += Additional_objects;
 
-    realloc (name_table->objects, name_table->capacity * sizeof (Object));
+    int new_capacity = name_table->capacity + Additional_objects;
+
+    name_table->objects = (Object*) realloc (name_table->objects, new_capacity * sizeof (Object));
 
     if (Check_nullptr (name_table->objects)) 
         return PROCESS_ERROR (RECALLOC_MEMORY_ERR, "Error allocating memory for objects\n");
-    
+
+    for (int id = name_table->capacity; id <new_capacity; id++)
+    {
+        Object_init (name_table->objects + id, "", OBJ_UNKNOWN_T);
+        name_table->objects[id].data = nullptr;
+    }
+
     return 0;
 }
 
@@ -144,9 +149,7 @@ int Find_id_object (const Name_table *name_table, const char *name_object)
     for (int id = 0; id < name_table->cnt_object; id++) 
     {   
         if ((name_table->objects + id)->name_hash == new_string_hash) 
-        {
             return id;
-        }
     }
 
     return Not_init_object;

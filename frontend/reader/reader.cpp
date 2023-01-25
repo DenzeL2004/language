@@ -24,7 +24,9 @@ static Node* Definition_variable (int *pos, const Array_struct *tokens);
 
 static Node* Definition_array    (int *pos, const Array_struct *tokens);
 
-bool Check_capacity (char *token);
+static Node* Read_array          (int *pos, const Array_struct *tokens);
+
+bool Check_capacity              (char *token);
 
 //-------------------------------------------------------------------------------
 //RULE: DEFINITION FUNCTION
@@ -184,6 +186,7 @@ static Node* Definition_array (int *pos, const Array_struct *tokens)
 
     Node *node = Create_empty_node ();
     DEF_TYPE (node, NARR);
+    CHANGE_DATA (node, obj, cur_token);
     
     cur_token = GET_TOKEN (*pos);
 
@@ -216,7 +219,7 @@ static Node* Definition_array (int *pos, const Array_struct *tokens)
         return nullptr;
     }
 
-    node->right = CREATE_VAL_NODE (atof (cur_token));
+    node->left = CREATE_VAL_NODE (atof (cur_token));
     
     (*pos)++;
     cur_token = GET_TOKEN (*pos);
@@ -455,13 +458,66 @@ static Node* Read_statement (int *pos, const Array_struct *tokens)
             return Read_block (pos, tokens);
 
         char *next_token = GET_TOKEN (*pos + 1);
+
         if (!strcmp (next_token, "("))
             return Parce_expression (pos, tokens);
+
+        if (!strcmp (next_token, "["))
+            return Read_array (pos, tokens);
 
         return Read_assignment (pos, tokens);
     }
 
     return nullptr;
+}
+
+//=================================================================================================
+
+static Node* Read_array (int *pos, const Array_struct *tokens)
+{
+    assert (tokens != nullptr && "tokens is nullptr");
+    assert (pos != nullptr && "pos is nullptr");
+
+    char* cur_token  = GET_TOKEN (*pos);
+
+    if (strcmp (GET_TOKEN (*pos + 1), "["))
+    {
+        PROCESS_ERROR (SYNTAX_ERR,  "array cannot start with \'%s\'."
+                                    " Must start by \'[\'\n", GET_TOKEN (*pos + 1));
+        return nullptr;
+    }
+
+    Node *node = Create_empty_node ();
+    DEF_TYPE (node, ARR);
+    CHANGE_DATA (node, obj, cur_token);
+    
+    (*pos) += 2;
+
+    node->left  = Get_logical_or (pos, tokens);
+    if (Check_nullptr (node->left))
+    {
+        PROCESS_ERROR (SYNTAX_ERR, "Unable to access the given index.\n");
+        return nullptr;
+    }
+
+    cur_token = GET_TOKEN (*pos);
+    if (strcmp (cur_token, "]"))
+    {
+        PROCESS_ERROR (SYNTAX_ERR,  "array cannot end with \'%s\'."
+                                    " Must end by \']\'\n", cur_token);
+        return nullptr;
+    }
+
+    (*pos)++;
+    cur_token = GET_TOKEN (*pos);
+    
+    if (!strcmp (cur_token, Name_lang_type_node [ASS]))
+    {
+        (*pos)++;
+        node->right =  Parce_expression (pos, tokens);
+    }
+
+    return node;
 }
 
 //=================================================================================================
@@ -697,7 +753,7 @@ static Node* Definition_variable (int *pos, const Array_struct *tokens)
 
     if (Is_reserved_word (cur_token))
     {
-        PROCESS_ERROR (SYNTAX_ERR, "a reserved word \"%s\" has been used as a variable name", cur_token);
+        PROCESS_ERROR (SYNTAX_ERR, "a reserved word \"%s\" has been used as a variable name.\n", cur_token);
         return nullptr;
     }
 
@@ -705,11 +761,13 @@ static Node* Definition_variable (int *pos, const Array_struct *tokens)
 
     CHANGE_DATA (node, obj, cur_token);
 
-    cur_token = GET_TOKEN (*pos);
+    if (strcmp (GET_TOKEN (*pos), Name_lang_type_node [ASS]))
+    {
+        PROCESS_ERROR  (SYNTAX_ERR, "uninitialized variable \"%s\".\n", cur_token);
+        return nullptr;
+    }
 
-    if (!strcmp (cur_token, Name_lang_type_node [ASS]))
-        (*pos)++;
-
+    (*pos)++;
     node->right = Parce_expression (pos, tokens);
 
     return node;
@@ -1109,8 +1167,13 @@ static Node* Get_priority (int *pos, const Array_struct *tokens)
                 return nullptr;
             }
 
-            node = Create_object_node (cur_token, nullptr, nullptr);
-            (*pos)++;
+            if (!strcmp (GET_TOKEN (*pos+1), "["))
+                node = Read_array (pos, tokens);
+            else
+            {
+                node = Create_object_node (cur_token, nullptr, nullptr);
+                (*pos)++;
+            }
         }
     }
 

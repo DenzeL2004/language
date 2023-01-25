@@ -3,7 +3,7 @@
 
 #include "stdint.h"
 
-static const int Init_number_objects = 20;
+static const int Init_number_objects = 100;
 
 static const int Additional_objects  = 20;
 
@@ -18,8 +18,11 @@ enum Type_object
     
     OBJ_VAR         =  0,
     OBJ_FUNC        =  1,
+
     OBJ_CALL_FUNC   =  3,
     OBJ_PARAM       =  4,
+
+    OBJ_ARR         =  5,
 };
 
 
