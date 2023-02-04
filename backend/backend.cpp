@@ -134,7 +134,7 @@ int Create_asm_file (const Tree *ast_tree, const char* name_output_file)
     #endif
 
     if (Namespace_check (ast_tree))
-        return PROCESS_ERROR (COMPILATION_ERR, "\n");
+        return PROCESS_ERROR (COMPILATION_ERR, "namespace check failed\n");
 
     FILE* fpout = Open_file_ptr (name_output_file, "w");
     if (Check_nullptr (fpout))
@@ -179,7 +179,7 @@ static int Namespace_check (const Tree *ast_tree)
 
     int check_res = Check_function_call (ast_tree->root, &function_names);
     if (check_res != 0)
-        PROCESS_ERROR (INVALID_CALL, "invalid function call\n");
+        return PROCESS_ERROR (INVALID_CALL, "invalid function call\n");
 
     if (Name_table_dtor (&function_names))
         return PROCESS_ERROR (NAME_TABLE_DTOR_ERR, "Dtor \'function_names\' error\n");   
@@ -198,9 +198,6 @@ static int Check_function_call (const Node *node, Name_table *function_names)
 
     if (!Check_nullptr (node->left))
         cnt += Check_function_call (node->left, function_names);
-
-    if (!Check_nullptr (node->right))
-        cnt += Check_function_call (node->right, function_names);
     
     if (GET_TYPE (node) == ARG || GET_TYPE (node) == PAR) cnt++;
 
@@ -217,6 +214,9 @@ static int Check_function_call (const Node *node, Name_table *function_names)
         cnt = 0;
     }
 
+    if (!Check_nullptr (node->right))
+        cnt += Check_function_call (node->right, function_names);
+
     if (GET_TYPE (node) == CALL)
     {
         int id = Find_id_object (function_names, GET_DATA (node, obj));
@@ -224,7 +224,7 @@ static int Check_function_call (const Node *node, Name_table *function_names)
         {
             int cnt_param = *((int*) function_names->objects[id].data);
             if (cnt != cnt_param)
-                PROCESS_ERROR (INCORRECT_CNT_ARG, "function \'%s\' function has the wrong number of arguments: %d. "
+                return PROCESS_ERROR (INCORRECT_CNT_ARG, "function \'%s\' function has the wrong number of arguments: %d. "
                                "Must be: %d\n", GET_DATA (node, obj), cnt, cnt_param);
         }
 

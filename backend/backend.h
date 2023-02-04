@@ -38,6 +38,6 @@ int Namespace_struct_dtor (Namespace_struct *namespace_struct);
 
 int Create_asm_file (const Tree *ast_tree, const char* name_output_file = Default_backend_output);
 
-#define LOOK_BACKEND_AST_TREE
+//#define LOOK_BACKEND_AST_TREE
 
 #endif //_BACKEND_H_
