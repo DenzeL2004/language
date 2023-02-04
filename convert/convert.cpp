@@ -11,21 +11,33 @@
 
 static int Write_to_file  (FILE *fpout, const Node *node, const int shift = 0);
 
+
 static int Write_defs     (FILE *fpout, const Node *node, const int shift = 0);
 
 static int Write_nvar     (FILE *fpout, const Node *node, const int shift = 0);
 
 static int Write_nfun     (FILE *fpout, const Node *node, const int shift = 0);
 
+static int Write_narr     (FILE *fpout, const Node *node, const int shift = 0);
+
+
 static int Write_call     (FILE *fpout, const Node *node, const int shift = 0);
 
 static int Write_ret      (FILE *fpout, const Node *node, const int shift = 0);
 
-static int Write_oper     (FILE *fpout, const Node *node, const int shift = 0);
+static int Write_par      (FILE *fpout, const Node *node, const int shift = 0);
 
-static int Write_const    (FILE *fpout, const Node *node, const int shift = 0);
+static int Write_arg      (FILE *fpout, const Node *node, const int shift = 0);
+
+
+
+static int Write_const    (FILE *fpout, const Node *node, const int shift = 0, const int num_rep = 0);
 
 static int Write_var      (FILE *fpout, const Node *node, const int shift = 0);
+
+static int Write_arr      (FILE *fpout, const Node *node, const int shift = 0);
+
+
 
 static int Write_assig    (FILE *fpout, const Node *node, const int shift = 0);
 
@@ -33,13 +45,14 @@ static int Write_seq      (FILE *fpout, const Node *node, const int shift = 0);
 
 static int Write_block    (FILE *fpout, const Node *node, const int shift = 0);
 
-static int Write_par      (FILE *fpout, const Node *node, const int shift = 0);
 
-static int Write_arg      (FILE *fpout, const Node *node, const int shift = 0);
+static int Write_oper     (FILE *fpout, const Node *node, const int shift = 0);
+
 
 static int Write_if       (FILE *fpout, const Node *node, const int shift = 0);
 
 static int Write_branch   (FILE *fpout, const Node *node, const int shift = 0);
+
 
 static int Write_while    (FILE *fpout, const Node *node, const int shift = 0);
 
@@ -49,6 +62,10 @@ static int Write_while    (FILE *fpout, const Node *node, const int shift = 0);
 int Create_convert_file (const Tree *ast_tree, const char* name_output_file)
 {
     assert (ast_tree !=  nullptr && "ast_tree is nullptr");
+
+    #ifdef LOOK_CONVERT_AST_TREE
+        Draw_database (ast_tree);
+    #endif
 
     FILE* fpout = Open_file_ptr (name_output_file, "w");
     if (Check_nullptr (fpout))
@@ -79,6 +96,9 @@ static int Write_to_file (FILE *fpout, const Node *node, const int shift)
         case NVAR:  Write_nvar    (fpout, node, shift);
             break;
 
+        case NARR:  Write_narr    (fpout, node, shift);
+            break;
+
         case NFUN: Write_nfun     (fpout, node, shift);
             break;
         
@@ -104,6 +124,9 @@ static int Write_to_file (FILE *fpout, const Node *node, const int shift)
             break;
 
         case VAR:   Write_var     (fpout, node, shift);
+            break;
+
+        case ARR:  Write_arr      (fpout, node, shift);
             break;
 
         case SEQ:   Write_seq     (fpout, node, shift);
@@ -160,6 +183,21 @@ static int Write_nvar (FILE *fpout, const Node *node, const int shift)
         fprintf (fpout, " %s ", Name_lang_type_node [ASS]);
         Write_to_file (fpout, node->right, shift);
     }  
+
+    return 0;
+}
+
+//======================================================================================================
+
+static int Write_narr (FILE *fpout, const Node *node, const int shift)
+{
+    assert (fpout != nullptr && "fpout is nullptr");
+   
+    fprintf (fpout, "%s %s[", Name_lang_type_node [NARR], GET_DATA (node, obj));
+
+    Write_const (fpout, node->left, shift, Int_num_rep);
+
+    fprintf (fpout, "]");
 
     return 0;
 }
@@ -352,7 +390,7 @@ static int Write_seq (FILE *fpout, const Node *node, const int shift)
 {
     assert (fpout != nullptr && "fpout is nullptr");
    
-   fprintf (fpout, "%*c", shift, ' ');
+    fprintf (fpout, "%*c", shift, ' ');
 
     Write_to_file (fpout, node->left,  shift); 
     
@@ -379,11 +417,14 @@ static int Write_block (FILE *fpout, const Node *node, const int shift)
 
 //======================================================================================================
 
-static int Write_const (FILE *fpout, const Node *node, const int shift)
+static int Write_const (FILE *fpout, const Node *node, const int shift, const int num_rep)
 {
     assert (fpout != nullptr && "fpout is nullptr");
    
-    fprintf (fpout, "%.3lf", GET_DATA (node, val));
+    if (num_rep)
+        fprintf (fpout, "%d", (int) GET_DATA (node, val));
+    else
+        fprintf (fpout, "%.3lf", GET_DATA (node, val));
 
     return 0;
 }
@@ -396,6 +437,27 @@ static int Write_var (FILE *fpout, const Node *node, const int shift)
    
     fprintf (fpout, "%s", GET_DATA (node, obj));
     
+    return 0;
+}
+
+//======================================================================================================
+
+static int Write_arr (FILE *fpout, const Node *node, const int shift)
+{
+    assert (fpout != nullptr && "fpout is nullptr");
+   
+    fprintf (fpout, "%s[", GET_DATA (node, obj));
+
+    Write_to_file (fpout, node->left, shift);
+
+    fprintf (fpout, "]");
+
+    if (!Check_nullptr (node->right))
+    {
+        fprintf (fpout, " %s ", Name_lang_type_node [ASS]);
+        Write_to_file (fpout, node->right, shift);
+    }  
+
     return 0;
 }
 

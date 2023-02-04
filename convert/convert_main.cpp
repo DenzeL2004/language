@@ -35,11 +35,14 @@ int main (int argc, char *argv[])
             if (Load_ast_tree (&ast_tree, argv[1]))
                 return PROCESS_ERROR (EXIT_FAILURE, "Read file in ast_tree fail\n");
             name_output_file = argv[2];
+
             break;
 
         default:
             return PROCESS_ERROR (EXIT_FAILURE, "Too many command line arguments\n");
     }
+
+    
 
     Create_convert_file (&ast_tree, name_output_file);
 

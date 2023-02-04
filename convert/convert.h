@@ -7,6 +7,8 @@
 #include "../config/language_config.h"
 #include "../config/language_dsl.h"
 
+const int Int_num_rep = 1; 
+
 enum Convert_func_err
 {
     UNKNOWN_TYPE_ERR   = -1,
