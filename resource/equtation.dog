@@ -1,17 +1,3 @@
-learnCommand squareSolver (ainu, bobtail, cat)
-{
-    if (ainu equal 0)
-        bring linerEquation (bobtail, cat);
-    
-    if (bobtail equal 0)
-        bring similarRoot (ainu, cat);
-
-    if (cat equal 0)
-        bring simpleEquation (ainu, bobtail);
-
-    bring squareEquation (ainu, bobtail, cat);
-}
-
 learnCommand simpleEquation (ainu, bobtail)
 {
     print (2);
@@ -97,6 +83,20 @@ learnCommand squareEquation (ainu, bobtail, cat)
     print (russianHound);
     
     bring 2;
+}
+
+learnCommand squareSolver (ainu, bobtail, cat)
+{
+    if (ainu equal 0)
+        bring linerEquation (bobtail, cat);
+    
+    if (bobtail equal 0)
+        bring similarRoot (ainu, cat);
+
+    if (cat equal 0)
+        bring simpleEquation (ainu, bobtail);
+
+    bring squareEquation (ainu, bobtail, cat);
 }
 
 learnCommand main ()

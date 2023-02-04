@@ -181,6 +181,17 @@ static int Namespace_check (const Tree *ast_tree)
     if (check_res != 0)
         return PROCESS_ERROR (INVALID_CALL, "invalid function call\n");
 
+    int check_calls = 0;
+    for (int id = 0; id < function_names.cnt_object; id++)
+    {
+        if (function_names.objects[id].type == OBJ_CALL_FUNC)
+            check_calls = PROCESS_ERROR (INVALID_CALL, "function \"%s\". %s", function_names.objects[id].name,
+                                                       "Call to undeclared function or below defined call\n");
+    }
+
+    if (check_calls)
+        return PROCESS_ERROR (INVALID_CALL, "invalid function call\n");
+
     if (Name_table_dtor (&function_names))
         return PROCESS_ERROR (NAME_TABLE_DTOR_ERR, "Dtor \'function_names\' error\n");   
 
@@ -204,7 +215,8 @@ static int Check_function_call (const Node *node, Name_table *function_names)
     if (GET_TYPE (node) == NFUN)
     {
         int id = Find_id_object (function_names, GET_DATA (node, obj));
-        if (id != Not_init_object)
+
+        if (id != Not_init_object && function_names->objects[id].type == OBJ_FUNC)      //func was definition before
             PROCESS_ERROR(REDEFINITION_ERR, "redefinition function \'%s\'\n", GET_DATA (node, obj));
 
         id = Add_object (function_names, GET_DATA (node, obj), OBJ_FUNC);
@@ -220,13 +232,16 @@ static int Check_function_call (const Node *node, Name_table *function_names)
     if (GET_TYPE (node) == CALL)
     {
         int id = Find_id_object (function_names, GET_DATA (node, obj));
-        if (id != Not_init_object)
+        if (id != Not_init_object && function_names->objects[id].type == OBJ_FUNC)  //func was definition before
         {
             int cnt_param = *((int*) function_names->objects[id].data);
             if (cnt != cnt_param)
-                return PROCESS_ERROR (INCORRECT_CNT_ARG, "function \'%s\' function has the wrong number of arguments: %d. "
+                return PROCESS_ERROR (INCORRECT_CNT_ARG, "function \'%s\' has the wrong number of arguments: %d. "
                                "Must be: %d\n", GET_DATA (node, obj), cnt, cnt_param);
         }
+        else
+            Add_object (function_names, GET_DATA (node, obj), OBJ_CALL_FUNC);
+        
 
         cnt = 0;
     }    
