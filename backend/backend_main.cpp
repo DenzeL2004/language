@@ -18,7 +18,7 @@ int main (int argc, char *argv[])
 
     Tree ast_tree = {};
     if (Tree_ctor (&ast_tree))
-        PROCESS_ERROR (EXIT_FAILURE, "Tree ctor failed\n");
+        return PROCESS_ERROR (EXIT_FAILURE, "Tree ctor failed\n");
 
     char *name_output_file = (char*) Default_backend_output;
     switch (argc)
@@ -41,10 +41,11 @@ int main (int argc, char *argv[])
             return PROCESS_ERROR (EXIT_FAILURE, "Too many command line arguments\n");
     }
 
-    Create_asm_file (&ast_tree, name_output_file);
+    if (Create_asm_file (&ast_tree, name_output_file))
+        return PROCESS_ERROR (EXIT_FAILURE, "Create asm file is failes\n");
 
     if (Tree_dtor (&ast_tree))
-        PROCESS_ERROR (EXIT_FAILURE, "Tree dtor failed\n");
+        return PROCESS_ERROR (EXIT_FAILURE, "Tree dtor failed\n");
 
     
     #ifdef USE_LOG

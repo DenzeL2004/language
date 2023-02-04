@@ -64,6 +64,8 @@ int Process_error_ (const char* error_name, const int error_val,
     fprintf (stderr, "In function %s, ", func_name);
     fprintf (stderr, "In line %d: ", line);
 
+    va_start(args, format);
+
     vfprintf(stderr, format, args);
 
     fprintf (stderr, "\n\n");
