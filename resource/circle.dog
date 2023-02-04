@@ -1,14 +1,3 @@
-learnCommand main ()
-{
-    breed coordX nickname read ();
-    breed coordY nickname read ();
-    breed rad    nickname read ();
-
-    drawBooth (coordX, coordY, rad);
-    bring 0;
-}
-
-
 learnCommand drawBooth (coordX, coordY, rad)
 {
     breed line nickname 0;
@@ -34,3 +23,15 @@ learnCommand drawBooth (coordX, coordY, rad)
 
     bring 0;
 }
+
+
+learnCommand main ()
+{
+    breed coordX nickname read ();
+    breed coordY nickname read ();
+    breed rad    nickname read ();
+
+    drawBooth (coordX, coordY, rad);
+    bring 0;
+}
+
