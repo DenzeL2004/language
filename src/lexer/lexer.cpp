@@ -86,9 +86,14 @@ static char* Cut_num (const char **buffer)
     assert (buffer != nullptr && "buffer is nullptr");
 
     int len_num = 0;
+
+    int cnt_dots = 0;
     
     while (isdigit (**buffer) || **buffer == '.')
     {
+        if (**buffer == '.') cnt_dots++;
+        if (cnt_dots == 2)  break;
+
         len_num++;
         (*buffer)++;
     }
